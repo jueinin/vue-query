@@ -7,7 +7,12 @@
     <router-view />
   </div>
 </template>
+<script lang="ts">
+import {defineComponent} from 'vue'
+export default defineComponent({
 
+})
+</script>
 <style lang="less">
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
