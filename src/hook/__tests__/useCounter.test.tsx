@@ -19,6 +19,6 @@ describe("useCounter",()=> {
         add(2);
         expect(state.value).toEqual(2);
         minus(3);
-        expect(state.value)
+        expect(state.value).toEqual(-1);
     });
 })
