@@ -12,13 +12,13 @@ describe("useCounter",()=> {
         })
         const {state,add,minus} = wrapper.vm.counter
         expect(state.value).toEqual(0);
-        add();
+        await add();
         expect(state.value).toEqual(1);
-        minus();
+        await minus();
         expect(state.value).toEqual(0);
-        add(2);
+        await add(2);
         expect(state.value).toEqual(2);
-        minus(3);
+        await minus(3);
         expect(state.value).toEqual(-1);
     });
 })

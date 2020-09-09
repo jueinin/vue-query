@@ -8,9 +8,6 @@ const useCounter = (initialValue: number = 0) => {
     const minus = (delta: number = 1): void => {
         state.value =state.value-delta
     }
-    watch(state,(v)=>{
-        console.log(v)
-    })
     return {state, add, minus}
 };
 export {useCounter}

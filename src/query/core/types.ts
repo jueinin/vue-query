@@ -1,37 +1,55 @@
-export type QueryKey =
-    string
+import { Ref } from 'vue';
+export type TempQueryKey = string
     | number
     | boolean
     | object
     | null
     | undefined
-    // | { [key: string]: QueryKey }
-    // | { [key: number]: QueryKey }
-    | any[];
-// export type Thenable<Value, Return> = { then: (value: Value) => Return } & object;
+    | any[]
+export type QueryKey = Ref<TempQueryKey>;
+export type ArrayQueryKey = Ref<TempQueryKey[]>;
 export type QueryFn = <Parameter extends Array<any>,Value=unknown>(...args: Parameter)=> Promise<Value>
-export type QueryConfig<TResult=any, TError = unknown, TData = TResult> = {
-    retry?: boolean | number | ((failCount: number, error: TError) => boolean)
-    initialData?: TResult | (() => TResult)
+export type BaseQueryConfig<TResult=any, TError = any> = {
+    retry?: false | number | ((retryCount: number, error: TError) => boolean),
+    retryDelay?: (failCount: number) => number
+    initialData?: TResult | (() => TResult),
+    cacheTime?: number;
+    enabled?: boolean;
+    onSuccess?: (data: TResult)=>void
+    onError?: (error: TError) => void,
+    staleTime?: number;
 };
+
 
 export enum QueryStatus {
     Loading = "loading",
     Error = 'error',
-    Success = 'success'
+    Success = 'success',
+    Idle="idle"
 }
-
+export type ReFetchOptions = {
+    /**
+     * @description when force is true, reFetch will ignore stale time, request again immediately
+     */
+    force?: boolean
+}
 export type QueryResult<Result=any,Error=any> = {
     data: Result| undefined,
     error: Result | undefined
-    failCount: number
     isError: boolean,
-    isFetching: boolean,
     isLoading: boolean,
-    status: QueryStatus
+    isSuccess: boolean;
+    status: QueryStatus,
+    retryCount: number,
+    reFetch: (options?: ReFetchOptions)=> void
 }
 export type UseQueryObjectConfig<Result=any,Error=any> = {
     queryKey: QueryKey,
     queryFn: QueryFn,
-    config?: QueryConfig<Result, Error>
+    config?: BaseQueryConfig<Result, Error>
+}
+
+export enum CacheStaleStatus {
+    staled = "staled",
+    notStaled = "notStaled",
 }

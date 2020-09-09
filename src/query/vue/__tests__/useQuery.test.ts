@@ -1,22 +1,197 @@
-import {renderHook} from "../../../../tests/utils";
-import {useQuery} from "@/query/vue/useQuery";
-import { ref } from 'vue';
-
-describe("useQuery",()=> {
-    it('when queryKey changed,queryFn need execute again', function () {
-        const fn = jest.fn().mockResolvedValue('dd');
+import { renderHook } from "../../../../tests/utils";
+import { useQuery } from "@/query/vue/useQuery";
+import { ref } from "vue";
+import { QueryStatus } from "@/query/core/types";
+import flushPromises from "flush-promises/index";
+import { delay } from "@/query/utils";
+import {queryCache} from "@/query/core/queryCache";
+import {defaultConfig} from "@/query/core/config";
+jest.useFakeTimers();
+describe("useQuery", () => {
+    it("when queryKey changed,queryFn need execute again", async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
         const hook = renderHook(() => {
-            const v = ref(0)
+            const v = ref(0);
             const query = useQuery(v, fn);
             const add = () => v.value++;
-            return {v,add}
+            return { v, add };
         });
         expect(fn).toHaveBeenCalledTimes(1);
-        hook.vm.add()
+        await hook.vm.add();
         expect(fn).toHaveBeenCalledTimes(2);
-        hook.vm.add()
+        await hook.vm.add();
         expect(fn).toHaveBeenCalledTimes(3);
-        hook.vm.add()
-        expect(fn).toHaveBeenCalledTimes(4)
+        await hook.vm.add();
+        expect(fn).toHaveBeenCalledTimes(4);
+        expect(fn.mock.calls).toEqual([[0], [1], [2], [3]]);
     });
-})
+    it("should get data", async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
+        const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+        const query = hook.vm.query;
+        expect(query).toEqual(
+            expect.objectContaining({
+                data: undefined,
+                error: undefined,
+                isSuccess: false,
+                isError: false,
+                status: QueryStatus.Idle,
+                isLoading: true,
+            })
+        );
+        await flushPromises();
+        expect(query).toEqual(
+            expect.objectContaining({
+                data: "dd",
+                error: undefined,
+                isSuccess: true,
+                isError: false,
+                isLoading: false,
+                status: QueryStatus.Success,
+            })
+        );
+    });
+    it("should get error information", async function () {
+        const fn = jest.fn().mockRejectedValue("dd");
+        const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+        const query = hook.vm.query;
+        expect(query).toEqual(
+            expect.objectContaining({
+                data: undefined,
+                error: undefined,
+                isSuccess: false,
+                isError: false,
+                status: QueryStatus.Idle,
+                isLoading: true,
+            })
+        );
+        await flushPromises();
+        expect(query).toEqual(
+            expect.objectContaining({
+                data: undefined,
+                error: "dd",
+                isSuccess: false,
+                isError: true,
+                isLoading: false,
+                status: QueryStatus.Error,
+            })
+        );
+    });
+    describe("retry", () => {
+        it("default retry 3 times", async () => {
+            // 每次遇见请求必须用flush promise 把resolved的promise让他执行掉，
+            const fn = jest.fn().mockRejectedValue("dd");
+            const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            jest.advanceTimersByTime(2000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(2);
+            jest.advanceTimersByTime(4000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(3);
+            jest.advanceTimersByTime(8000);
+            await flushPromises()
+            expect(fn).toHaveBeenCalledTimes(4);
+        });
+        it("can retry multiple times", async function () {
+            const fn = jest.fn().mockRejectedValue("dd");
+            const hook = renderHook(() => ({ query: useQuery(ref("key"), fn, { retry: 2 }) }));
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            jest.advanceTimersByTime(2000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(2);
+            jest.advanceTimersByTime(4000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(3);
+            jest.advanceTimersByTime(8000);
+            await flushPromises()
+            // 时间再往后拉也只是3了，不会再重试
+            expect(fn).toHaveBeenCalledTimes(3);
+        });
+        it("disable retry", async function () {
+            const fn = jest.fn().mockRejectedValue("dd");
+            const hook = renderHook(() => ({ query: useQuery(ref("key"), fn, { retry: false }) }));
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            jest.advanceTimersByTime(2000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1)
+        });
+        it('before retry,it should be error status', async function () {
+            const fn = jest.fn().mockRejectedValue("dd");
+            const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            jest.advanceTimersByTime(1000);
+            // pending to reFetch,it should be error status
+            expect(hook.vm.query).toEqual(expect.objectContaining({
+                isError: true,
+                isLoading:false,
+                error: "dd"
+            }))
+            jest.advanceTimersByTime(1000);
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(2)
+        });
+    });
+    it('when disable, it should not request', async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
+        const hook = renderHook(() => {
+            const key = ref('key')
+            return { query: useQuery(key, fn,{enabled: false}), changeKey: () => key.value = key.value + "dd" }
+        });
+        await flushPromises();
+        expect(fn).not.toHaveBeenCalled();
+        hook.vm.changeKey();
+        await flushPromises()
+        expect(fn).not.toHaveBeenCalled();
+    });
+    it('initial data： when initial data is set, it should go into success status,and should not cache initial data', async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
+        const hook = renderHook(() => {
+            const key = ref('key')
+            return { query: useQuery(key, fn,{initialData: "66"}), changeKey: () => key.value = key.value + "dd" }
+        });
+        await flushPromises();
+        expect(fn).not.toHaveBeenCalled();
+        expect(hook.vm.query).toEqual(expect.objectContaining({
+            data: "66",
+            isLoading: false,
+            retryCount: 0,
+            isSuccess: true,
+        }));
+        expect(queryCache.getCache(JSON.stringify("key"))).toBeUndefined();
+        // execute request again
+        await hook.vm.changeKey();
+        // it should be loading, we won't cache initial data
+        expect(hook.vm.query.isLoading).toBeTruthy();
+        await flushPromises();
+        expect(hook.vm.query.data).toEqual("dd");
+    });
+    describe("cache and stale",()=> {
+        /**
+         * @description stale time normally is set to 0，which means the cache will stale immediately，cache time default is 5 minutes
+         */
+        it('default cache time is 5 minutes ', async function () {
+            const fn = jest.fn().mockResolvedValue("dd");
+            const addToCacheSpy = jest.spyOn(queryCache, "addToCache");
+            const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+            await flushPromises()
+            expect(addToCacheSpy).toHaveBeenCalledTimes(1);
+            expect(addToCacheSpy).toHaveBeenLastCalledWith(JSON.stringify("key"),expect.objectContaining({"data": "dd", "storeTime": expect.any(Number)}),defaultConfig.cacheTime)
+            expect(queryCache.getCache(JSON.stringify("key"))).toEqual(expect.objectContaining({"data": "dd", "storeTime": expect.any(Number)}));
+            jest.advanceTimersByTime(defaultConfig.cacheTime);
+            expect(queryCache.getCache(JSON.stringify("key"))).toEqual(undefined);
+        });
+        it('default stale time is 0, which means we always used cached value and request to fresh value immediately', function () {
+            const fn = jest.fn().mockResolvedValue("dd");
+            const hook = renderHook(() => {
+                const key = ref('key')
+                return { query: useQuery(key, fn), changeKey: () => key.value = key.value + "dd" }
+            });
+            // need refetch
+        });
+    })
+});

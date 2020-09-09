@@ -1,19 +1,150 @@
-import {QueryConfig, QueryFn, QueryKey, QueryResult, UseQueryObjectConfig} from "@/query/core/types";
-import {getQueryArgs} from "@/query/utils";
-import { watch, ref,onMounted, toRef, Ref } from 'vue';
+import {
+    BaseQueryConfig,
+    CacheStaleStatus,
+    QueryFn,
+    QueryKey,
+    QueryResult,
+    QueryStatus,
+    ReFetchOptions,
+    TempQueryKey,
+    UseQueryObjectConfig,
+} from "@/query/core/types";
+import { delay, getQueryArgs } from "@/query/utils";
+import { reactive, watch } from "vue";
+import { CacheValue, queryCache } from "@/query/core/queryCache";
 
-export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn): QueryResult<TResult, TError>
-export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn, config: QueryConfig<TResult, TError>): QueryResult<TResult, TError>
-export function useQuery<TResult,TError>(queryObject: UseQueryObjectConfig<TResult, TError>): QueryResult<TResult, TError>
-export function useQuery(...args: any): any {
+/**
+ *
+ * @param queryKey it must be a ref value,because we can not watch a normal value
+ * @param fn
+ */
+export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn): QueryResult<TResult, TError>;
+export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn, config: BaseQueryConfig<TResult, TError>): QueryResult<TResult, TError>;
+export function useQuery<TResult, TError>(queryObject: UseQueryObjectConfig<TResult, TError>): QueryResult<TResult, TError>;
+export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TError> {
     const [queryKey, queryFn, config] = getQueryArgs(...args);
-    // const queryKeyRef= ref(queryKey)
-    watch(queryKey as Ref<number>,(newValue)=>{
-        if (Array.isArray(newValue)) {
-            queryFn(...newValue);
-        } else {
-            queryFn(newValue)
-        }
-    },{immediate: true})
+    // the config has merged default config
+    const result = reactive<QueryResult>({
+        isLoading: false,
+        data: undefined,
+        error: undefined,
+        isError: false,
+        isSuccess: false,
+        status: QueryStatus.Idle,
+        retryCount: 0,
+        reFetch: () => {},
+    });
+    /**
+     * @description when it's 1, which means first exec
+     */
+    let execTimes = 0;
+    watch(
+        queryKey,
+        function (newValue) {
+            exec(newValue);
+            function exec(newValue: TempQueryKey) {
+                if (!config.enabled) {
+                    return;
+                }
+                execTimes++;
+                const shouldHandleInitialData: boolean = config.initialData !== undefined && execTimes === 1;
+                const queryKeyStr: string = JSON.stringify(newValue);
+                const cache: CacheValue | undefined = queryCache.getCache<TResult>(queryKeyStr);
+                const hasCache: boolean = cache !== undefined;
+                if (shouldHandleInitialData) {
+                    handleInitialData();
+                    return;
+                }
+                if (hasCache) {
+                    if (getCacheStaleStatus(cache!) === CacheStaleStatus.notStaled) {
+                        setSuccessStatus(cache!.data);
+                        return;
+                    } else {
+                        setSuccessStatus(cache!.data);
+                    }
+                }
+                setLoading(cache);
+                fetch();
 
+                function setSuccessStatus(data: TResult) {
+                    result.data = data;
+                    result.isSuccess = true;
+                    result.status = QueryStatus.Success;
+                    result.isLoading = false;
+                    config.onSuccess(data);
+                }
+
+                function setErrorStatus(error: TError) {
+                    result.error = error;
+                    result.isError = true;
+                    result.status = QueryStatus.Error;
+                    result.isLoading = false;
+                    config.onError(error);
+                }
+
+                function handleInitialData() {
+                    const initialData: TResult = typeof config.initialData === "function" ? config.initialData() : config.initialData;
+                    setSuccessStatus(initialData);
+                }
+
+                function getCacheStaleStatus(cache: CacheValue): CacheStaleStatus {
+                    return Date.now() - cache.storeTime < config.staleTime ? CacheStaleStatus.notStaled : CacheStaleStatus.staled;
+                }
+
+                function setLoading(cache: CacheValue | undefined) {
+                    if (!cache) {
+                        result.isLoading = true;
+                    }
+                }
+
+                function reFetch(options: ReFetchOptions) {
+                    // e
+                }
+
+                /**
+                 * @description when a function is passed to retry,we should ignore retryCount
+                 * @param error
+                 */
+                const getShouldRetry = (error: TError) => {
+                    const maxRetryCount: number = config.retry === false ? 0 : (config.retry as number);
+                    let shouldRetryByRetryFn: boolean | undefined = undefined;
+                    if (typeof config.retry === "function") {
+                        shouldRetryByRetryFn = config.retry(result.retryCount, error);
+                    }
+                    return shouldRetryByRetryFn === true || (shouldRetryByRetryFn === undefined && result.retryCount < maxRetryCount);
+                };
+                const retry = (error: TError) => {
+                    const retryDelay = config.retryDelay(result.retryCount);
+                    if (typeof config.retry !== "function") {
+                        result.retryCount++;
+                    }
+                    delay(retryDelay).then(() => exec(newValue));
+                    setErrorStatus(error);
+                };
+                function fetch() {
+                    let promise: Promise<TResult>;
+                    if (Array.isArray(queryKey.value)) {
+                        promise = queryFn(...queryKey.value);
+                    } else {
+                        promise = queryFn(queryKey.value);
+                    }
+                    promise
+                        .then((value) => {
+                            setSuccessStatus(value);
+                            queryCache.addToCache(queryKeyStr, { storeTime: Date.now(), data: value }, config.cacheTime);
+                            return value;
+                        })
+                        .catch((error) => {
+                            if (getShouldRetry(error)) {
+                                retry(error);
+                            }
+                            setErrorStatus(error);
+                            return error;
+                        });
+                }
+            }
+        },
+        { immediate: true }
+    );
+    return result;
 }
