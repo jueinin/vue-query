@@ -1,4 +1,4 @@
-import { BaseQueryConfig } from "@/query/core/types";
+import {BaseQueryConfig, ReFetchOptions} from "@/query/core/types";
 import { noop } from '../utils';
 export const defaultRetryDelay = (failCount: number) => Math.min(1000 * 2 ** failCount, 30000);
 export const defaultConfig: Required<BaseQueryConfig> = {
@@ -11,3 +11,6 @@ export const defaultConfig: Required<BaseQueryConfig> = {
     enabled: true,
     staleTime: 0
 };
+export const defaultReFetchOptions :ReFetchOptions = {
+    force: false
+}

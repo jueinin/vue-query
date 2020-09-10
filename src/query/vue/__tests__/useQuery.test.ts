@@ -4,8 +4,8 @@ import { ref } from "vue";
 import { QueryStatus } from "@/query/core/types";
 import flushPromises from "flush-promises/index";
 import { delay } from "@/query/utils";
-import {queryCache} from "@/query/core/queryCache";
-import {defaultConfig} from "@/query/core/config";
+import { queryCache } from "@/query/core/queryCache";
+import { defaultConfig } from "@/query/core/config";
 jest.useFakeTimers();
 describe("useQuery", () => {
     it("when queryKey changed,queryFn need execute again", async function () {
@@ -91,7 +91,7 @@ describe("useQuery", () => {
             await flushPromises();
             expect(fn).toHaveBeenCalledTimes(3);
             jest.advanceTimersByTime(8000);
-            await flushPromises()
+            await flushPromises();
             expect(fn).toHaveBeenCalledTimes(4);
         });
         it("can retry multiple times", async function () {
@@ -106,7 +106,7 @@ describe("useQuery", () => {
             await flushPromises();
             expect(fn).toHaveBeenCalledTimes(3);
             jest.advanceTimersByTime(8000);
-            await flushPromises()
+            await flushPromises();
             // 时间再往后拉也只是3了，不会再重试
             expect(fn).toHaveBeenCalledTimes(3);
         });
@@ -117,51 +117,55 @@ describe("useQuery", () => {
             expect(fn).toHaveBeenCalledTimes(1);
             jest.advanceTimersByTime(2000);
             await flushPromises();
-            expect(fn).toHaveBeenCalledTimes(1)
+            expect(fn).toHaveBeenCalledTimes(1);
         });
-        it('before retry,it should be error status', async function () {
+        it("before retry,it should be error status", async function () {
             const fn = jest.fn().mockRejectedValue("dd");
             const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
             await flushPromises();
             expect(fn).toHaveBeenCalledTimes(1);
             jest.advanceTimersByTime(1000);
             // pending to reFetch,it should be error status
-            expect(hook.vm.query).toEqual(expect.objectContaining({
-                isError: true,
-                isLoading:false,
-                error: "dd"
-            }))
+            expect(hook.vm.query).toEqual(
+                expect.objectContaining({
+                    isError: true,
+                    isLoading: false,
+                    error: "dd",
+                })
+            );
             jest.advanceTimersByTime(1000);
             await flushPromises();
-            expect(fn).toHaveBeenCalledTimes(2)
+            expect(fn).toHaveBeenCalledTimes(2);
         });
     });
-    it('when disable, it should not request', async function () {
+    it("when disable, it should not request", async function () {
         const fn = jest.fn().mockResolvedValue("dd");
         const hook = renderHook(() => {
-            const key = ref('key')
-            return { query: useQuery(key, fn,{enabled: false}), changeKey: () => key.value = key.value + "dd" }
+            const key = ref("key");
+            return { query: useQuery(key, fn, { enabled: false }), changeKey: () => (key.value = key.value + "dd") };
         });
         await flushPromises();
         expect(fn).not.toHaveBeenCalled();
         hook.vm.changeKey();
-        await flushPromises()
+        await flushPromises();
         expect(fn).not.toHaveBeenCalled();
     });
-    it('initial data： when initial data is set, it should go into success status,and should not cache initial data', async function () {
+    it("initial data： when initial data is set, it should go into success status,and should not cache initial data", async function () {
         const fn = jest.fn().mockResolvedValue("dd");
         const hook = renderHook(() => {
-            const key = ref('key')
-            return { query: useQuery(key, fn,{initialData: "66"}), changeKey: () => key.value = key.value + "dd" }
+            const key = ref("key");
+            return { query: useQuery(key, fn, { initialData: "66" }), changeKey: () => (key.value = key.value + "dd") };
         });
         await flushPromises();
         expect(fn).not.toHaveBeenCalled();
-        expect(hook.vm.query).toEqual(expect.objectContaining({
-            data: "66",
-            isLoading: false,
-            retryCount: 0,
-            isSuccess: true,
-        }));
+        expect(hook.vm.query).toEqual(
+            expect.objectContaining({
+                data: "66",
+                isLoading: false,
+                retryCount: 0,
+                isSuccess: true,
+            })
+        );
         expect(queryCache.getCache(JSON.stringify("key"))).toBeUndefined();
         // execute request again
         await hook.vm.changeKey();
@@ -170,28 +174,83 @@ describe("useQuery", () => {
         await flushPromises();
         expect(hook.vm.query.data).toEqual("dd");
     });
-    describe("cache and stale",()=> {
+    describe("cache and stale", () => {
         /**
          * @description stale time normally is set to 0，which means the cache will stale immediately，cache time default is 5 minutes
          */
-        it('default cache time is 5 minutes ', async function () {
+        it("default cache time is 5 minutes ", async function () {
             const fn = jest.fn().mockResolvedValue("dd");
             const addToCacheSpy = jest.spyOn(queryCache, "addToCache");
             const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
-            await flushPromises()
+            await flushPromises();
             expect(addToCacheSpy).toHaveBeenCalledTimes(1);
-            expect(addToCacheSpy).toHaveBeenLastCalledWith(JSON.stringify("key"),expect.objectContaining({"data": "dd", "storeTime": expect.any(Number)}),defaultConfig.cacheTime)
-            expect(queryCache.getCache(JSON.stringify("key"))).toEqual(expect.objectContaining({"data": "dd", "storeTime": expect.any(Number)}));
+            expect(addToCacheSpy).toHaveBeenLastCalledWith(
+                JSON.stringify("key"),
+                expect.objectContaining({
+                    data: "dd",
+                    storeTime: expect.any(Number),
+                }),
+                defaultConfig.cacheTime
+            );
+            expect(queryCache.getCache(JSON.stringify("key"))).toEqual(
+                expect.objectContaining({
+                    data: "dd",
+                    storeTime: expect.any(Number),
+                })
+            );
             jest.advanceTimersByTime(defaultConfig.cacheTime);
             expect(queryCache.getCache(JSON.stringify("key"))).toEqual(undefined);
         });
-        it('default stale time is 0, which means we always used cached value and request to fresh value immediately', function () {
+        it("default stale time is 0, which means we always used cached value and request to fresh value immediately", async function () {
             const fn = jest.fn().mockResolvedValue("dd");
             const hook = renderHook(() => {
-                const key = ref('key')
-                return { query: useQuery(key, fn), changeKey: () => key.value = key.value + "dd" }
+                const key = ref("key");
+                return { query: useQuery(key, fn), changeKey: () => (key.value = key.value + "dd") };
             });
-            // need refetch
+            const query = hook.vm.query;
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(query.data).toEqual("dd");
+            queryCache.removeFromCache(JSON.stringify("key"));
+            queryCache.addToCache(JSON.stringify("key"), { storeTime: Date.now() - 1, data: "dd2" });
+            hook.vm.query.reFetch();
+            expect(hook.vm.query.data).toEqual("dd2");
+            await flushPromises();
+            expect(query.data).toEqual("dd");
         });
-    })
+        it("when stale time is set,if cache is staled,refetch to server, otherwise set success status and set data with cached value", async function () {
+            const fn = jest.fn().mockResolvedValue("dd");
+            const dateNow = jest.spyOn(Date, "now").mockReturnValue(0);
+            const hook = renderHook(() => {
+                const key = ref("key");
+                return { query: useQuery(key, fn, { staleTime: 500 }) };
+            });
+            const query = hook.vm.query;
+            await flushPromises();
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(dateNow).toHaveBeenCalledTimes(1);
+            expect(query.data).toEqual("dd");
+            hook.vm.query.reFetch();
+            expect(hook.vm.query.data).toEqual("dd");
+            await flushPromises();
+            // cache is not staled, so we will never request,return cache instead
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(query.data).toEqual("dd");
+            dateNow.mockRestore();
+        });
+    });
+    it("anytime it's fetching data from server, isFetching should be true. loading should only work when without cache", async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
+        const hook = renderHook(() => ({ query: useQuery(ref("key"), fn) }));
+        const query = hook.vm.query;
+        expect(query.isFetching).toBeTruthy();
+        await flushPromises();
+        expect(query.isFetching).toBeFalsy();
+        query.reFetch();
+        expect(query.isFetching).toBeTruthy();
+        expect(query.isLoading).toBeFalsy()
+        await flushPromises();
+        expect(query.isFetching).toBeFalsy();
+        expect(query.isLoading).toBeFalsy()
+    });
 });

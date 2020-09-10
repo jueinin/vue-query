@@ -41,6 +41,7 @@ export type QueryResult<Result=any,Error=any> = {
     isSuccess: boolean;
     status: QueryStatus,
     retryCount: number,
+    isFetching: boolean;
     reFetch: (options?: ReFetchOptions)=> void
 }
 export type UseQueryObjectConfig<Result=any,Error=any> = {
