@@ -13,6 +13,7 @@ import { delay, getQueryArgs, noop } from "@/query/utils";
 import { reactive, watch } from "vue";
 import { CacheValue, queryCache } from "@/query/core/queryCache";
 import { defaultReFetchOptions } from "@/query/core/config";
+import {queryGlobal} from "@/query/core/queryGlobal";
 
 /**
  *
@@ -127,6 +128,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
         };
         function fetch() {
             result.isFetching = true;
+            queryGlobal.addIsFetching()
             let promise: Promise<TResult>;
             if (Array.isArray(queryKey.value)) {
                 promise = queryFn(...queryKey.value);
@@ -148,6 +150,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
                 })
                 .finally(() => {
                     result.isFetching = false;
+                    queryGlobal.removeIsFetching()
                 });
         }
     }

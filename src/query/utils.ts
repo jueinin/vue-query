@@ -1,6 +1,6 @@
 import { BaseQueryConfig, QueryFn, QueryKey, UseQueryObjectConfig } from "@/query/core/types";
 import { defaultConfig } from "./core/config";
-import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch} from 'vue'
+import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch, isRef} from 'vue'
 export const getQueryArgs = (...args: any[]): [QueryKey, QueryFn, Required<BaseQueryConfig>] => {
     let queryKey: QueryKey, queryFn: QueryFn, config: Required<BaseQueryConfig>;
     if (args.length == 1 && typeof args[0] === "object") {
@@ -32,32 +32,6 @@ export function delay(ms: number) {
     });
 }
 export const noop = () => {};
-
-export const useEffect = (callback:Function,trigger: Ref<Array<any>>)=> {
-    let s: Function;
-    let changed: boolean = false;
-    let shouldRunBeforeUpdate = false;
-    onMounted(()=>{
-        s = callback();
-    })
-    onUnmounted(() => {
-        s && s();
-    });
-    onUpdated(()=>{
-        console.log('dd');
-        if (changed) {
-            callback();
-        }
-        changed = false;
-        shouldRunBeforeUpdate = true;
-    })
-    onBeforeUpdate(() => {
-        if (shouldRunBeforeUpdate) {
-            s && s();
-        }
-        shouldRunBeforeUpdate=false
-    });
-    watch(trigger,(value, oldValue) => {
-        changed = true;
-    })
+export const getValueFromRefOrNot = <T>(value: Ref<T>| T):T => {
+    return isRef(value) ? value.value : value;
 }

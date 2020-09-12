@@ -4,12 +4,12 @@ export type CacheValue<T = any> = {
     storeTime: number;
     data: T;
 };
-export const createCacheValue =<T>(value:T):CacheValue<T>=> {
+export const createCacheValue = <T>(value: T): CacheValue<T> => {
     return {
         storeTime: Date.now(),
-        data: value
-    }
-}
+        data: value,
+    };
+};
 export class QueryCache {
     private map: Map<string, CacheValue> = new Map();
     addToCache = (key: string, value: CacheValue, cacheTime: number = defaultConfig.cacheTime) => {
@@ -22,9 +22,11 @@ export class QueryCache {
         this.map.delete(key);
     };
     getCache = <T = any>(key: string): CacheValue<T> | undefined => {
-        return this.map.get(key)
+        return this.map.get(key);
     };
-
+    clear = () => {
+        this.map.clear();
+    };
 }
 
 const queryCache = new QueryCache();

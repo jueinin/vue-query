@@ -1,5 +1,5 @@
 import Vue, {defineComponent} from 'vue'
-import { shallowMount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 
 export function renderHook<V, Props = unknown, Data = unknown>(
     setup: () => V,
@@ -9,5 +9,5 @@ export function renderHook<V, Props = unknown, Data = unknown>(
         template: '<div ref="app" id="app"></div>',
     })
 
-    return shallowMount<typeof Vue & V>(App as any)
+    return mount<typeof Vue & V>(App as any)
 }

@@ -1,8 +1,8 @@
-import {delay, getQueryArgs, useEffect} from "@/query/utils";
+import {delay, getQueryArgs} from "@/query/utils";
 import {defaultConfig} from "@/query/core/config";
 import flushPromises from "flush-promises/index";
 import {mount} from "@vue/test-utils";
-import { ref, watch } from 'vue';
+import { ref, watch, Ref } from 'vue';
 import {renderHook} from "../../../tests/utils";
 
 describe("test utils function",()=> {
@@ -26,44 +26,18 @@ describe("test utils function",()=> {
         await flushPromises()
         expect(fn).toHaveBeenCalledTimes(1);
     });
-    describe('useEffect', function () {
-        const getFn = ()=> {
-            const fnUnmount = jest.fn();
-            const fn = jest.fn().mockReturnValue(fnUnmount);
-            return {fnUnmount,fn}
-        }
-        it('should call callback when mounted and unmounted', function () {
-            const {fn,fnUnmount} = getFn()
-            const hook = renderHook(() => useEffect(fn, ref([])));
-            expect(fn).toHaveBeenCalledTimes(1);
-            hook.unmount();
-            expect(fnUnmount).toHaveBeenCalledTimes(1);
-        });
-        test("when update trigger, before update calls fnUnmount,updated calls fn",async ()=>{
-            const {fn,fnUnmount} = getFn()
-            const hook = mount({
-                setup() {
-                    const count = ref([1]);
-                    const temp = ref(0);
-                    watch(temp,()=>{
-                        console.log('changed')
-                    })
-                    return {
-                        count, change: ()=>{
-                            count.value[0]++;
-                            temp.value++;
-                        }
-                    }
-                },render() {
-                    return <div id={'count'} onClick={this.change}>{this.count}</div>
-                }
-            })
-            expect(hook.get("#count").text()).toEqual("1");
-            await hook.get("#count").trigger("click");
-            // await hook.vm.change();
-            expect(hook.get("#count").text()).toEqual("2");
-            expect(fnUnmount).toHaveBeenCalledTimes(1)
-            expect(fn).toHaveBeenCalledTimes(1)
-        })
-    });
+    // describe('useEffect', function () {
+    //     const getFn = ()=> {
+    //         const fnUnmount = jest.fn();
+    //         const fn = jest.fn().mockReturnValue(fnUnmount);
+    //         return {fnUnmount,fn}
+    //     }
+    //     it('should call callback when mounted and unmounted', function () {
+    //         const {fn,fnUnmount} = getFn()
+    //         const hook = renderHook(() => useEffect(fn, ref([])));
+    //         expect(fn).toHaveBeenCalledTimes(1);
+    //         hook.unmount();
+    //         expect(fnUnmount).toHaveBeenCalledTimes(1);
+    //     });
+    // });
 })
