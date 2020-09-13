@@ -1,18 +1,18 @@
 import {
-    BaseQueryConfig,
+    PlainBaseQueryConfig,
     CacheStaleStatus,
     QueryFn,
     QueryKey,
     QueryResult,
     QueryStatus,
     ReFetchOptions,
-    TempQueryKey,
-    UseQueryObjectConfig,
+    PlainQueryKey,
+    UseQueryObjectConfig, BaseQueryConfig,
 } from "@/query/core/types";
-import { delay, getQueryArgs, noop } from "@/query/utils";
-import { reactive, watch } from "vue";
+import {delay, getQueryArgs, getValueFromRefOrNot, noop} from "@/query/utils";
+import { reactive, watch, isRef, computed } from "vue";
 import { CacheValue, queryCache } from "@/query/core/queryCache";
-import { defaultReFetchOptions } from "@/query/core/config";
+import {defaultConfig, defaultReFetchOptions} from "@/query/core/config";
 import {queryGlobal} from "@/query/core/queryGlobal";
 
 /**
@@ -41,14 +41,14 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
      * @description when it's 1, which means first exec
      */
     let execTimes = 0;
-    function exec(newValue: TempQueryKey) {
-        if (!config.enabled) {
+    function exec(newValue: readonly [PlainQueryKey, { enabled: boolean }]) {
+        if (!config.value.enabled) {
             return;
         }
         execTimes++;
         result.reFetch = reFetch;
-        const shouldHandleInitialData: boolean = config.initialData !== undefined && execTimes === 1;
-        const queryKeyStr: string = JSON.stringify(newValue);
+        const shouldHandleInitialData: boolean = config.value.initialData !== undefined && execTimes === 1;
+        const queryKeyStr: string = JSON.stringify(newValue[0] ?? "");
         const cache: CacheValue | undefined = queryCache.getCache<TResult>(queryKeyStr);
         const hasCache: boolean = cache !== undefined;
         if (shouldHandleInitialData) {
@@ -71,7 +71,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
             result.isSuccess = true;
             result.status = QueryStatus.Success;
             result.isLoading = false;
-            config.onSuccess(data);
+            config.value.onSuccess(data);
         }
 
         function setErrorStatus(error: TError) {
@@ -79,16 +79,16 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
             result.isError = true;
             result.status = QueryStatus.Error;
             result.isLoading = false;
-            config.onError(error);
+            config.value.onError(error);
         }
 
         function handleInitialData() {
-            const initialData: TResult = typeof config.initialData === "function" ? config.initialData() : config.initialData;
+            const initialData: TResult = typeof config.value.initialData === "function" ? config.value.initialData() : config.value.initialData;
             setSuccessStatus(initialData);
         }
 
         function getCacheStaleStatus(cache: CacheValue): CacheStaleStatus {
-            return Date.now() - cache.storeTime < config.staleTime ? CacheStaleStatus.notStaled : CacheStaleStatus.staled;
+            return Date.now() - cache.storeTime < config.value.staleTime ? CacheStaleStatus.notStaled : CacheStaleStatus.staled;
         }
 
         function setLoading(cache: CacheValue | undefined) {
@@ -111,16 +111,16 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
          * @param error
          */
         const getShouldRetry = (error: TError) => {
-            const maxRetryCount: number = config.retry === false ? 0 : (config.retry as number);
+            const maxRetryCount: number = config.value.retry === false ? 0 : typeof config.value.retry === "number" ? config.value.retry : defaultConfig.retry as number;
             let shouldRetryByRetryFn: boolean | undefined = undefined;
-            if (typeof config.retry === "function") {
-                shouldRetryByRetryFn = config.retry(result.retryCount, error);
+            if (typeof config.value.retry === "function") {
+                shouldRetryByRetryFn = config.value.retry(result.retryCount, error);
             }
             return shouldRetryByRetryFn === true || (shouldRetryByRetryFn === undefined && result.retryCount < maxRetryCount);
         };
         const retry = (error: TError) => {
-            const retryDelay = config.retryDelay(result.retryCount);
-            if (typeof config.retry !== "function") {
+            const retryDelay = config.value.retryDelay(result.retryCount);
+            if (typeof config.value.retry !== "function") {
                 result.retryCount++;
             }
             delay(retryDelay).then(() => exec(newValue));
@@ -138,7 +138,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
             promise
                 .then((value) => {
                     setSuccessStatus(value);
-                    queryCache.addToCache(queryKeyStr, { storeTime: Date.now(), data: value }, config.cacheTime);
+                    queryCache.addToCache(queryKeyStr, { storeTime: Date.now(), data: value }, config.value.cacheTime);
                     return value;
                 })
                 .catch((error) => {
@@ -155,7 +155,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
         }
     }
     watch(
-        queryKey,
+        [queryKey,computed(()=>({enabled: config.value.enabled}))] as const,
         function (newValue) {
             exec(newValue);
         },

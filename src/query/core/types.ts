@@ -1,15 +1,15 @@
 import { Ref } from 'vue';
-export type TempQueryKey = string
+export type PlainQueryKey = string
     | number
     | boolean
     | object
     | null
     | undefined
     | any[]
-export type QueryKey = Ref<TempQueryKey>;
-export type ArrayQueryKey = Ref<TempQueryKey[]>;
+export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey
+export type ArrayQueryKey = Ref<PlainQueryKey[]>;
 export type QueryFn = <Parameter extends Array<any>,Value=unknown>(...args: Parameter)=> Promise<Value>
-export type BaseQueryConfig<TResult=any, TError = any> = {
+export type PlainBaseQueryConfig<TResult=any, TError = any> = {
     retry?: false | number | ((retryCount: number, error: TError) => boolean),
     retryDelay?: (failCount: number) => number
     initialData?: TResult | (() => TResult),
@@ -19,6 +19,8 @@ export type BaseQueryConfig<TResult=any, TError = any> = {
     onError?: (error: TError) => void,
     staleTime?: number;
 };
+export type BaseQueryConfigRef<TResult,TError> = Ref<PlainBaseQueryConfig<TResult,TError>>
+export type BaseQueryConfig<TResult,TError> = BaseQueryConfigRef<TResult, TError> | PlainBaseQueryConfig<TResult,TError>
 
 
 export enum QueryStatus {

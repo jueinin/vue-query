@@ -1,4 +1,4 @@
-import {ArrayQueryKey, BaseQueryConfig} from "@/query/core/types";
+import {ArrayQueryKey, PlainBaseQueryConfig} from "@/query/core/types";
 
 // export class Query<Result=any,Error=any> {
 //     queryKey: ArrayQueryKey;

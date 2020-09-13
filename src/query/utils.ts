@@ -1,26 +1,28 @@
-import { BaseQueryConfig, QueryFn, QueryKey, UseQueryObjectConfig } from "@/query/core/types";
+import {PlainBaseQueryConfig, QueryFn, QueryKey, PlainQueryKey, UseQueryObjectConfig} from "@/query/core/types";
 import { defaultConfig } from "./core/config";
-import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch, isRef} from 'vue'
-export const getQueryArgs = (...args: any[]): [QueryKey, QueryFn, Required<BaseQueryConfig>] => {
-    let queryKey: QueryKey, queryFn: QueryFn, config: Required<BaseQueryConfig>;
+import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch, isRef, ref, computed} from 'vue'
+export const getQueryArgs = (...args: any[]): [Ref<PlainQueryKey>, QueryFn, Ref<Required<PlainBaseQueryConfig>>] => {
+    let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn, config: Ref<Required<PlainBaseQueryConfig>>;
     if (args.length == 1 && typeof args[0] === "object") {
         // object parameter
         const arg: UseQueryObjectConfig<any, any> = args[0];
-        queryKey = arg.queryKey;
+        queryKey = isRef(arg.queryKey) ? arg.queryKey : ref(arg.queryKey);
         queryFn = arg.queryFn;
         if (!queryFn) {
             throw new Error("queryFn is required");
         }
-        config = Object.assign({}, defaultConfig, arg.config);
+        config = computed(() => {
+            return Object.assign({}, defaultConfig, getValueFromRefOrNot(arg.config))
+        });
     } else if (args.length === 2 && typeof args[1] === "function") {
         // without config,need use default config
-        queryKey = args[0];
+        queryKey = isRef(args[0]) ? args[0] : ref(args[0]);
         queryFn = args[1];
-        config = Object.assign({}, defaultConfig);
+        config = ref(Object.assign({}, defaultConfig));
     } else if (args.length > 2) {
-        queryKey = args[0];
+        queryKey = isRef(args[0]) ? args[0] : ref(args[0]);
         queryFn = args[1];
-        config = Object.assign({}, defaultConfig, args[2]);
+        config = computed(() => Object.assign({}, defaultConfig, getValueFromRefOrNot(args[2])));
     } else {
         throw new Error("param error, please refer docs!");
     }

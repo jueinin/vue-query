@@ -54,7 +54,18 @@ describe("useQuery", () => {
     //     console.log(wrapper.vm.counter)
     // });
     //
-    it("when queryKey changed,queryFn need execute again", async function () {
+    it('when passed a plain value(not a ref) as queryKey, it should works too', async function () {
+        const fn = jest.fn().mockRejectedValue("ddd");
+        const hook = renderHook(() => {
+            return {query: useQuery(['/api/', 2], fn)}
+        });
+        await flushPromises();
+        expect(fn).toHaveBeenCalledTimes(1);
+        jest.advanceTimersByTime(2000);
+        await flushPromises()
+        expect(fn).toHaveBeenCalledTimes(2);
+    });
+    it("when queryKey ref changed,queryFn need execute again", async function () {
         const fn = jest.fn().mockResolvedValue("dd");
         const str = '/api/test';
         const hook = renderHook(() => {
@@ -200,6 +211,23 @@ describe("useQuery", () => {
         hook.vm.changeKey();
         await flushPromises();
         expect(fn).not.toHaveBeenCalled();
+    });
+    it('should retch again when we disable and enable ,disable and enable', async function () {
+        const fn = jest.fn().mockResolvedValue("dd");
+        const hook = renderHook(() => {
+            const config = ref({enabled: false})
+            const toggleEnable = () => config.value.enabled = !config.value.enabled;
+            const query = useQuery("key", fn, config);
+            return {query, toggleEnable,config}
+        });
+        expect(fn).not.toHaveBeenCalled();
+        await hook.vm.toggleEnable();// enable
+        expect(fn).toHaveBeenCalledTimes(1);
+        await flushPromises();
+        await hook.vm.toggleEnable(); // disable
+        expect(fn).toHaveBeenCalledTimes(1);
+        await hook.vm.toggleEnable(); // enable
+        expect(fn).toHaveBeenCalledTimes(2);
     });
     it("initial data： when initial data is set, it should go into success status,and should not cache initial data", async function () {
         const fn = jest.fn().mockResolvedValue("dd");
