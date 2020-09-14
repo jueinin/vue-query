@@ -8,7 +8,7 @@ export type PlainQueryKey = string
     | any[]
 export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey
 export type ArrayQueryKey = Ref<PlainQueryKey[]>;
-export type QueryFn = <Parameter extends Array<any>,Value=unknown>(...args: Parameter)=> Promise<Value>
+export type QueryFn<PlainKey,Value> = (...args: PlainKey extends Array<any>? PlainKey: [PlainKey])=> Promise<Value>
 export type PlainBaseQueryConfig<TResult=any, TError = any> = {
     retry?: false | number | ((retryCount: number, error: TError) => boolean),
     retryDelay?: (failCount: number) => number
@@ -44,11 +44,12 @@ export type QueryResult<Result=any,Error=any> = {
     status: QueryStatus,
     retryCount: number,
     isFetching: boolean;
-    reFetch: (options?: ReFetchOptions)=> void
+    reFetch: (options?: ReFetchOptions)=> void,
+    cancel: () => void
 }
-export type UseQueryObjectConfig<Result=any,Error=any> = {
-    queryKey: QueryKey,
-    queryFn: QueryFn,
+export type UseQueryObjectConfig<PlainKey extends PlainQueryKey,Result=any,Error=any> = {
+    queryKey: PlainKey | Ref<PlainKey>,
+    queryFn: QueryFn<PlainKey,Result>,
     config?: BaseQueryConfig<Result, Error>
 }
 
@@ -56,3 +57,6 @@ export enum CacheStaleStatus {
     staled = "staled",
     notStaled = "notStaled",
 }
+
+export type ToArray<T> = T extends Array<any> ? T : [T];
+type A = ToArray<any[]>;

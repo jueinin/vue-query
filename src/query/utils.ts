@@ -1,11 +1,18 @@
-import {PlainBaseQueryConfig, QueryFn, QueryKey, PlainQueryKey, UseQueryObjectConfig} from "@/query/core/types";
+import {
+    PlainBaseQueryConfig,
+    QueryFn,
+    QueryKey,
+    PlainQueryKey,
+    UseQueryObjectConfig,
+    ToArray
+} from "@/query/core/types";
 import { defaultConfig } from "./core/config";
 import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch, isRef, ref, computed} from 'vue'
-export const getQueryArgs = (...args: any[]): [Ref<PlainQueryKey>, QueryFn, Ref<Required<PlainBaseQueryConfig>>] => {
-    let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn, config: Ref<Required<PlainBaseQueryConfig>>;
+export const getQueryArgs = <PlainKey extends PlainQueryKey,TResult>(...args: any[]): [Ref<PlainQueryKey>, QueryFn<PlainKey,TResult>, Ref<Required<PlainBaseQueryConfig>>] => {
+    let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn<PlainKey,TResult>, config: Ref<Required<PlainBaseQueryConfig>>;
     if (args.length == 1 && typeof args[0] === "object") {
         // object parameter
-        const arg: UseQueryObjectConfig<any, any> = args[0];
+        const arg: UseQueryObjectConfig<PlainKey> = args[0];
         queryKey = isRef(arg.queryKey) ? arg.queryKey : ref(arg.queryKey);
         queryFn = arg.queryFn;
         if (!queryFn) {

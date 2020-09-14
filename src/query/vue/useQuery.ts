@@ -7,10 +7,10 @@ import {
     QueryStatus,
     ReFetchOptions,
     PlainQueryKey,
-    UseQueryObjectConfig, BaseQueryConfig,
+    UseQueryObjectConfig, BaseQueryConfig, ToArray,
 } from "@/query/core/types";
 import {delay, getQueryArgs, getValueFromRefOrNot, noop} from "@/query/utils";
-import { reactive, watch, isRef, computed } from "vue";
+import { reactive, watch, isRef, computed, Ref } from "vue";
 import { CacheValue, queryCache } from "@/query/core/queryCache";
 import {defaultConfig, defaultReFetchOptions} from "@/query/core/config";
 import {queryGlobal} from "@/query/core/queryGlobal";
@@ -20,11 +20,11 @@ import {queryGlobal} from "@/query/core/queryGlobal";
  * @param queryKey it must be a ref value,because we can not watch a normal value
  * @param fn
  */
-export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn): QueryResult<TResult, TError>;
-export function useQuery<TResult, TError>(queryKey: QueryKey, fn: QueryFn, config: BaseQueryConfig<TResult, TError>): QueryResult<TResult, TError>;
-export function useQuery<TResult, TError>(queryObject: UseQueryObjectConfig<TResult, TError>): QueryResult<TResult, TError>;
-export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TError> {
-    const [queryKey, queryFn, config] = getQueryArgs(...args);
+export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryKey: PlainKey | Ref<PlainKey>, fn: QueryFn<PlainKey,TResult>): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryKey: PlainKey | Ref<PlainKey>, fn: QueryFn<PlainKey,TResult>, config: BaseQueryConfig<TResult, TError>): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryObject: UseQueryObjectConfig<PlainKey,TResult, TError>): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args: any): QueryResult<TResult, TError> {
+    const [queryKey, queryFn, config] = getQueryArgs<PlainKey,TResult>(...args);
     // the config has merged default config
     const result = reactive<QueryResult>({
         isLoading: false,
@@ -36,6 +36,7 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
         retryCount: 0,
         reFetch: noop,
         isFetching: false,
+        cancel: noop
     });
     /**
      * @description when it's 1, which means first exec
@@ -129,11 +130,14 @@ export function useQuery<TResult, TError>(...args: any): QueryResult<TResult, TE
         function fetch() {
             result.isFetching = true;
             queryGlobal.addIsFetching()
-            let promise: Promise<TResult>;
+            let promise: Promise<TResult> & {cancel?: QueryResult["cancel"]};
             if (Array.isArray(queryKey.value)) {
                 promise = queryFn(...queryKey.value);
             } else {
                 promise = queryFn(queryKey.value);
+            }
+            if (typeof promise.cancel === "function") {
+                result.cancel = promise.cancel;
             }
             promise
                 .then((value) => {

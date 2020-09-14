@@ -332,4 +332,23 @@ describe("useQuery", () => {
         expect(query.isFetching).toBeFalsy();
         expect(query.isLoading).toBeFalsy()
     });
+    /**
+     * @description cancel method needs construct manually. and it's implement varies on different request lib
+     */
+    it('should cancel request when cancel is called', async function () {
+        const cancel = jest.fn();
+        const request = jest.fn(()=>{
+            let p: Promise<string> = Promise.resolve("dd");
+            // @ts-ignore
+            p.cancel = cancel;
+            return p
+        })
+        const hook = renderHook(() => {
+            const query = useQuery('dd', request)
+            return {query }
+        });
+        // now it's waiting for result,and the promise.then method have not called yet
+        await hook.vm.query.cancel();
+
+    });
 });
