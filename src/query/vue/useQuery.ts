@@ -132,8 +132,11 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
             queryGlobal.addIsFetching()
             let promise: Promise<TResult> & {cancel?: QueryResult["cancel"]};
             if (Array.isArray(queryKey.value)) {
+                // 我需要断言PlainQueryKey是any[]类型才行
+                // @ts-ignore
                 promise = queryFn(...queryKey.value);
             } else {
+                // @ts-ignore
                 promise = queryFn(queryKey.value);
             }
             if (typeof promise.cancel === "function") {

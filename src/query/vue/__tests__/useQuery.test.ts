@@ -349,6 +349,11 @@ describe("useQuery", () => {
         });
         // now it's waiting for result,and the promise.then method have not called yet
         await hook.vm.query.cancel();
-
+        expect(cancel).toHaveBeenCalledTimes(1);
     });
+    // it('should ', function () {
+    //     const q = useQuery([1,'D'],(n,s)=>{
+    //
+    //     })
+    // });
 });

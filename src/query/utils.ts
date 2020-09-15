@@ -44,3 +44,6 @@ export const noop = () => {};
 export const getValueFromRefOrNot = <T>(value: Ref<T>| T):T => {
     return isRef(value) ? value.value : value;
 }
+export const isNonNullable = <T>(value: T| undefined|null)=>{
+
+}
