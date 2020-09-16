@@ -1,17 +1,16 @@
 import {
-    PlainBaseQueryConfig,
+    BaseQueryConfig,
     CacheStaleStatus,
+    PlainQueryKey,
     QueryFn,
-    QueryKey,
     QueryResult,
     QueryStatus,
     ReFetchOptions,
-    PlainQueryKey,
-    UseQueryObjectConfig, BaseQueryConfig, ToArray,
+    UseQueryObjectConfig,
 } from "@/query/core/types";
-import {delay, getQueryArgs, getValueFromRefOrNot, noop} from "@/query/utils";
-import { reactive, watch, isRef, computed, Ref } from "vue";
-import { CacheValue, queryCache } from "@/query/core/queryCache";
+import {delay, getQueryArgs, noop, useMountAndUnmount} from "@/query/utils";
+import {computed, reactive, Ref, watch} from "vue";
+import {CacheValue, queryCache} from "@/query/core/queryCache";
 import {defaultConfig, defaultReFetchOptions} from "@/query/core/config";
 import {queryGlobal} from "@/query/core/queryGlobal";
 
@@ -36,7 +35,9 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         retryCount: 0,
         reFetch: noop,
         isFetching: false,
-        cancel: noop
+        cancel: ()=>{
+            console.error("your query function should return a promise with cancel property")
+        }
     });
     /**
      * @description when it's 1, which means first exec
@@ -95,6 +96,7 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         function setLoading(cache: CacheValue | undefined) {
             if (!cache) {
                 result.isLoading = true;
+                result.status=QueryStatus.Loading
             }
         }
 
@@ -168,5 +170,24 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         },
         { immediate: true }
     );
+    useMountAndUnmount(()=>{
+        const handler = () => exec([queryKey.value, config.value])
+        if (config.value.refetchOnReconnect) {
+            window.addEventListener("online", handler, false);
+        }
+        if (config.value.refetchOnWindowFocus) {
+            window.addEventListener('visibilitychange', handler, false);
+            window.addEventListener("focus", handler, false);
+        }
+        return ()=> {
+            if (config.value.refetchOnReconnect) {
+                window.removeEventListener("online", handler)
+            }
+            if (config.value.refetchOnWindowFocus) {
+                window.removeEventListener("focus", handler);
+                window.removeEventListener("visibilitychange",handler)
+            }
+        };
+    })
     return result;
 }

@@ -1,7 +1,7 @@
 import { renderHook } from "../../../../tests/utils";
 import { useQuery } from "@/query/vue/useQuery";
 import { ref, toRef, reactive, watch, toRefs, computed } from "vue";
-import { QueryStatus } from "@/query/core/types";
+import {CancelablePromise, QueryStatus} from "@/query/core/types";
 import flushPromises from "flush-promises/index";
 import { queryCache } from "@/query/core/queryCache";
 import { defaultConfig } from "@/query/core/config";
@@ -97,7 +97,7 @@ describe("useQuery", () => {
                 error: undefined,
                 isSuccess: false,
                 isError: false,
-                status: QueryStatus.Idle,
+                status: QueryStatus.Loading,
                 isLoading: true,
             })
         );
@@ -123,7 +123,7 @@ describe("useQuery", () => {
                 error: undefined,
                 isSuccess: false,
                 isError: false,
-                status: QueryStatus.Idle,
+                status: QueryStatus.Loading,
                 isLoading: true,
             })
         );
@@ -338,8 +338,7 @@ describe("useQuery", () => {
     it('should cancel request when cancel is called', async function () {
         const cancel = jest.fn();
         const request = jest.fn(()=>{
-            let p: Promise<string> = Promise.resolve("dd");
-            // @ts-ignore
+            let p: CancelablePromise<string> = Promise.resolve("dd");
             p.cancel = cancel;
             return p
         })
@@ -350,10 +349,36 @@ describe("useQuery", () => {
         // now it's waiting for result,and the promise.then method have not called yet
         await hook.vm.query.cancel();
         expect(cancel).toHaveBeenCalledTimes(1);
+        // this is just a fake cancel method, it will not cancel request actually
     });
-    // it('should ', function () {
-    //     const q = useQuery([1,'D'],(n,s)=>{
-    //
-    //     })
-    // });
+    test("when network reconnect we should refetch data",async () => {
+        const fn = jest.fn().mockResolvedValue('dd');
+        const hook = renderHook(() => {
+            return {query: useQuery('d', fn)}
+        });
+        await flushPromises();
+        expect(fn).toHaveBeenCalledTimes(1);
+        const reconnectEvent = new window.Event('online');
+        window.dispatchEvent(reconnectEvent);
+        await flushPromises();
+        expect(fn).toHaveBeenCalledTimes(2);
+    })
+    test("when window focus, refetch",async ()=>{
+        const fn = jest.fn().mockResolvedValue('dd')
+        const hook = renderHook(() => {
+            return {query: useQuery('dddasd', fn)}
+        });
+        await flushPromises();
+        const focusEvent = new window.Event('focus');
+        const visibilitychangeEvent = new Event('visibilitychange')
+        window.dispatchEvent(focusEvent);
+        await flushPromises()
+        expect(fn).toHaveBeenCalledTimes(2);
+        window.dispatchEvent(visibilitychangeEvent)
+        await flushPromises()
+        expect(fn).toHaveBeenCalledTimes(3);
+    })
+    test("interval refetch", async () => {
+        // todo 实现
+    });
 });

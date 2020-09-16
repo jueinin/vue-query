@@ -3,7 +3,8 @@ export type PrimitiveType = string | number | boolean  | null | undefined | bigi
 export type PlainQueryKey = PrimitiveType | object | any[];
 export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey;
 export type ArrayQueryKey = Ref<PlainQueryKey[]>;
-export type QueryFn<PlainKey, Value> = (...args: PlainKey extends Array<any> ? PlainKey : [PlainKey]) => Promise<Value>;
+export type CancelablePromise<Value> = Promise<Value> & {cancel?: ()=>void}
+export type QueryFn<PlainKey, Value> = (...args: PlainKey extends Array<any> ? PlainKey : [PlainKey]) => CancelablePromise<Value>
 export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     retry?: false | number | ((retryCount: number, error: TError) => boolean);
     retryDelay?: (failCount: number) => number;
@@ -13,6 +14,8 @@ export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     onSuccess?: (data: TResult) => void;
     onError?: (error: TError) => void;
     staleTime?: number;
+    refetchOnReconnect?: boolean
+    refetchOnWindowFocus?: boolean
 };
 export type BaseQueryConfigRef<TResult, TError> = Ref<PlainBaseQueryConfig<TResult, TError>>;
 export type BaseQueryConfig<TResult, TError> = BaseQueryConfigRef<TResult, TError> | PlainBaseQueryConfig<TResult, TError>;
@@ -41,6 +44,15 @@ export type QueryResult<Result = any, Error = any> = {
     reFetch: (options?: ReFetchOptions) => void;
     cancel: () => void;
 };
+export type MutationResult<Data,Error> = {
+    data: Data | undefined,
+    error: Error|undefined,
+    isError: boolean,
+    isLoading: boolean,
+    isSuccess: boolean,
+    status: QueryStatus
+}
+
 export type UseQueryObjectConfig<PlainKey extends PlainQueryKey, Result = any, Error = any> = {
     queryKey: PlainKey | Ref<PlainKey>;
     queryFn: QueryFn<PlainKey, Result>;
@@ -52,5 +64,9 @@ export enum CacheStaleStatus {
     notStaled = "notStaled",
 }
 
-export type ToArray<T> = T extends Array<any> ? T : [T];
-type A = ToArray<any[]>;
+export type PlainMutationConfig<Variable,Data,Error,MutateValue=any> = {
+    onMutate?: (variable: Variable)=>MutateValue,
+    onSuccess?: (data: Data, variable: Variable) => void,
+    onError?: (error: Error,variable: Variable,mutableValue: MutateValue)=>void,
+    onSettled?: (data:Data,error: Error,variable: Variable,mutableValue: MutateValue)=>void
+}

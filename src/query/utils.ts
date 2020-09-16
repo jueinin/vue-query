@@ -4,7 +4,6 @@ import {
     QueryKey,
     PlainQueryKey,
     UseQueryObjectConfig,
-    ToArray
 } from "@/query/core/types";
 import { defaultConfig } from "./core/config";
 import {Ref,onMounted,onUnmounted,onBeforeUpdate,onUpdated, watch, isRef, ref, computed} from 'vue'
@@ -44,6 +43,14 @@ export const noop = () => {};
 export const getValueFromRefOrNot = <T>(value: Ref<T>| T):T => {
     return isRef(value) ? value.value : value;
 }
-export const isNonNullable = <T>(value: T| undefined|null)=>{
-
-}
+export const useMountAndUnmount = (fn: (() => any) | (() => () => void)) => {
+    let unMountFn: Function | undefined = undefined;
+    onMounted(() => {
+        unMountFn = fn();
+    })
+    onUnmounted(() => {
+        if (unMountFn) {
+            unMountFn()
+        }
+    })
+};

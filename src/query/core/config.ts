@@ -1,4 +1,4 @@
-import {PlainBaseQueryConfig, ReFetchOptions} from "@/query/core/types";
+import {PlainBaseQueryConfig, PlainMutationConfig, ReFetchOptions} from "@/query/core/types";
 import { noop } from '../utils';
 export const defaultRetryDelay = (failCount: number) => Math.min(1000 * 2 ** failCount, 30000);
 export const defaultConfig: Required<PlainBaseQueryConfig> = {
@@ -9,8 +9,16 @@ export const defaultConfig: Required<PlainBaseQueryConfig> = {
     onSuccess: ()=>{},
     onError: ()=>{},
     enabled: true,
-    staleTime: 0
+    staleTime: 0,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true
 };
 export const defaultReFetchOptions :ReFetchOptions = {
     force: false
+}
+export const defaultMutationConfig: Required<PlainMutationConfig<any, any, any>> = {
+    onMutate: noop,
+    onSettled: noop,
+    onSuccess: noop,
+    onError: noop
 }
