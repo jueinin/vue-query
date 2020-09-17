@@ -1,6 +1,6 @@
 import {
     BaseQueryConfig,
-    CacheStaleStatus,
+    CacheStaleStatus, PlainBaseQueryConfig,
     PlainQueryKey,
     QueryFn,
     QueryResult,
@@ -8,22 +8,31 @@ import {
     ReFetchOptions,
     UseQueryObjectConfig,
 } from "@/query/core/types";
-import {delay, getQueryArgs, noop, useMountAndUnmount} from "@/query/utils";
-import {computed, reactive, Ref, watch} from "vue";
-import {CacheValue, queryCache} from "@/query/core/queryCache";
-import {defaultConfig, defaultReFetchOptions} from "@/query/core/config";
-import {queryGlobal} from "@/query/core/queryGlobal";
+import { delay, getQueryArgs, noop, useMountAndUnmount } from "@/query/utils";
+import { computed, reactive, Ref, watch } from "vue";
+import { CacheValue, queryCache } from "@/query/core/queryCache";
+import { defaultConfig, defaultReFetchOptions } from "@/query/core/config";
+import { queryGlobal } from "@/query/core/queryGlobal";
 
 /**
  *
  * @param queryKey it must be a ref value,because we can not watch a normal value
  * @param fn
  */
-export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryKey: PlainKey | Ref<PlainKey>, fn: QueryFn<PlainKey,TResult>): QueryResult<TResult, TError>;
-export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryKey: PlainKey | Ref<PlainKey>, fn: QueryFn<PlainKey,TResult>, config: BaseQueryConfig<TResult, TError>): QueryResult<TResult, TError>;
-export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(queryObject: UseQueryObjectConfig<PlainKey,TResult, TError>): QueryResult<TResult, TError>;
-export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args: any): QueryResult<TResult, TError> {
-    const [queryKey, queryFn, config] = getQueryArgs<PlainKey,TResult>(...args);
+export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(
+    queryKey: PlainKey | Ref<PlainKey>,
+    fn: QueryFn<PlainKey, TResult>
+): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(
+    queryKey: PlainKey | Ref<PlainKey>,
+    fn: QueryFn<PlainKey, TResult>,
+    config: BaseQueryConfig<TResult, TError>
+): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(
+    queryObject: UseQueryObjectConfig<PlainKey, TResult, TError>
+): QueryResult<TResult, TError>;
+export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...args: any): QueryResult<TResult, TError> {
+    const [queryKey, queryFn, config] = getQueryArgs<PlainKey, TResult>(...args);
     // the config has merged default config
     const result = reactive<QueryResult>({
         isLoading: false,
@@ -35,22 +44,24 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         retryCount: 0,
         reFetch: noop,
         isFetching: false,
-        cancel: ()=>{
-            console.error("your query function should return a promise with cancel property")
-        }
+        cancel: () => {
+            console.error("your query function should return a promise with cancel property");
+        },
     });
     /**
      * @description when it's 1, which means first exec
      */
     let execTimes = 0;
-    function exec(newValue: readonly [PlainQueryKey, { enabled: boolean }]) {
+    let clearIntervalNum: number | undefined;
+    function exec(newValue: readonly [PlainQueryKey, Pick<PlainBaseQueryConfig, "enabled"|"refetchInterval">]) {
         if (!config.value.enabled) {
             return;
         }
         execTimes++;
+        clearInterval(clearIntervalNum);
         result.reFetch = reFetch;
         const shouldHandleInitialData: boolean = config.value.initialData !== undefined && execTimes === 1;
-        const queryKeyStr: string = JSON.stringify(newValue[0] ?? "");
+        const queryKeyStr: string = JSON.stringify(queryKey.value ?? "");
         const cache: CacheValue | undefined = queryCache.getCache<TResult>(queryKeyStr);
         const hasCache: boolean = cache !== undefined;
         if (shouldHandleInitialData) {
@@ -67,6 +78,7 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         }
         setLoading(cache);
         fetch();
+        handleRefetchInterval();
 
         function setSuccessStatus(data: TResult) {
             result.data = data;
@@ -96,7 +108,7 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         function setLoading(cache: CacheValue | undefined) {
             if (!cache) {
                 result.isLoading = true;
-                result.status=QueryStatus.Loading
+                result.status = QueryStatus.Loading;
             }
         }
 
@@ -114,7 +126,8 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
          * @param error
          */
         const getShouldRetry = (error: TError) => {
-            const maxRetryCount: number = config.value.retry === false ? 0 : typeof config.value.retry === "number" ? config.value.retry : defaultConfig.retry as number;
+            const maxRetryCount: number =
+                config.value.retry === false ? 0 : typeof config.value.retry === "number" ? config.value.retry : (defaultConfig.retry as number);
             let shouldRetryByRetryFn: boolean | undefined = undefined;
             if (typeof config.value.retry === "function") {
                 shouldRetryByRetryFn = config.value.retry(result.retryCount, error);
@@ -131,8 +144,8 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
         };
         function fetch() {
             result.isFetching = true;
-            queryGlobal.addIsFetching()
-            let promise: Promise<TResult> & {cancel?: QueryResult["cancel"]};
+            queryGlobal.addIsFetching();
+            let promise: Promise<TResult> & { cancel?: QueryResult["cancel"] };
             if (Array.isArray(queryKey.value)) {
                 // 我需要断言PlainQueryKey是any[]类型才行
                 // @ts-ignore
@@ -159,35 +172,49 @@ export function useQuery<PlainKey extends PlainQueryKey,TResult, TError>(...args
                 })
                 .finally(() => {
                     result.isFetching = false;
-                    queryGlobal.removeIsFetching()
+                    queryGlobal.removeIsFetching();
                 });
+        }
+        function handleRefetchInterval(){
+            let shouldRefetch: boolean;
+            if (config.value.refetchIntervalInBackground) {
+                shouldRefetch=true
+            }else {
+                shouldRefetch = !document.hidden;
+            }
+            if (config.value.refetchInterval !== false) {
+                clearIntervalNum=setInterval(() => {
+                    shouldRefetch && fetch()
+                }, config.value.refetchInterval);
+            }
         }
     }
     watch(
-        [queryKey,computed(()=>({enabled: config.value.enabled}))] as const,
+        [queryKey, computed(() => ({ enabled: config.value.enabled, refetchInterval: config.value.refetchInterval }))] as const,
         function (newValue) {
             exec(newValue);
         },
         { immediate: true }
     );
-    useMountAndUnmount(()=>{
-        const handler = () => exec([queryKey.value, config.value])
+    // handle event
+    useMountAndUnmount(() => {
+        const handler = () => exec([queryKey.value, config.value]);
         if (config.value.refetchOnReconnect) {
             window.addEventListener("online", handler, false);
         }
         if (config.value.refetchOnWindowFocus) {
-            window.addEventListener('visibilitychange', handler, false);
+            window.addEventListener("visibilitychange", handler, false);
             window.addEventListener("focus", handler, false);
         }
-        return ()=> {
+        return () => {
             if (config.value.refetchOnReconnect) {
-                window.removeEventListener("online", handler)
+                window.removeEventListener("online", handler);
             }
             if (config.value.refetchOnWindowFocus) {
                 window.removeEventListener("focus", handler);
-                window.removeEventListener("visibilitychange",handler)
+                window.removeEventListener("visibilitychange", handler);
             }
         };
-    })
+    });
     return result;
 }

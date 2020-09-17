@@ -15,7 +15,9 @@ export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     onError?: (error: TError) => void;
     staleTime?: number;
     refetchOnReconnect?: boolean
-    refetchOnWindowFocus?: boolean
+    refetchOnWindowFocus?: boolean,
+    refetchInterval?: number | false,
+    refetchIntervalInBackground?: boolean
 };
 export type BaseQueryConfigRef<TResult, TError> = Ref<PlainBaseQueryConfig<TResult, TError>>;
 export type BaseQueryConfig<TResult, TError> = BaseQueryConfigRef<TResult, TError> | PlainBaseQueryConfig<TResult, TError>;

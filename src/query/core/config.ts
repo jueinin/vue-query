@@ -11,7 +11,9 @@ export const defaultConfig: Required<PlainBaseQueryConfig> = {
     enabled: true,
     staleTime: 0,
     refetchOnReconnect: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    refetchInterval: false,
+    refetchIntervalInBackground: false
 };
 export const defaultReFetchOptions :ReFetchOptions = {
     force: false
