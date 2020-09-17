@@ -36,7 +36,7 @@ export type ReFetchOptions = {
 };
 export type QueryResult<Result = any, Error = any> = {
     data: Result | undefined;
-    error: Result | undefined;
+    error: Error | undefined;
     isError: boolean;
     isLoading: boolean;
     isSuccess: boolean;
