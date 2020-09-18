@@ -1,24 +1,26 @@
-Hooks for fetching, caching and updating asynchronous data in Vue,
-this is heavily inspired by [React Query](https://github.com/tannerlinsley/react-query).
-it's a binding for Vue composition API.
+基于vue composition api的网络请求库
 
-## Quick Features
+由[React Query](https://github.com/tannerlinsley/react-query)得到启发。
 
--   Transparent/backend agnostic data fetching, you can use what lib you like to request
--   Auto cache and refetch. by window refocus or stale-while-revalidate
--   Parallel and dependent queries
--   Request cancellation
--   Scroll restore out of box
+可以理解为基于vue的react query
+
+## 功能概览
+
+-   不限数据获取方式，你可以使用其他网络请求库例如`axios`，或者`umi request`，也可以使用HTTP或者graphql
+-   请求自动缓存，当数据过期或者浏览器窗口重新focus时自动重新从服务端获取数据
+-   并行请求、依赖请求
+-   取消请求
+-   开箱即用的滚动恢复
 
 ## Documentation
 
--   [Installation](#installation)
--   [QuickStart](#quick-start)
+-   [安装]](#安装)
+-   [快速上手](#快速上手)
 -   [Queries](#queries)
 -   [Caching & Invalidation](#caching-and-invalidation)
 -   [API](#api)
 
-# Installation
+# 安装
 
 ```shell script
 $ npm i --save @jueinin/vue-query
@@ -26,7 +28,11 @@ $ npm i --save @jueinin/vue-query
 $ yarn add @jueinin/vue-query
 ```
 
-#Quick Start
+# 快速上手
+
+get请求
+
+方便起见，以下示例均使用jsx编写。和模板差不多的。
 
 ```tsx
 import Axios from "axios";
@@ -52,13 +58,12 @@ const Todos = defineComponent({
 
 # Queries
 
-## make a simple request
+## 创建一个简单的请求
 
-to make a new query, call the `useQuery` hook, and pass at least two parameters.
+调用useQuery，并且至少传入以下两个参数来创建请求
 
--   a **unique query key**, you can pass primitive type or object and array. and should be unique in whole application.
--   an **asynchronous function** which should return Promise or PromiseLike to resolve the data.
-    the function will be called with query key as parameter. if the query key is array, the duntion will be called with spread operator(...).
+-  `queryKey` 一个能代表你请求的数据的 `queryKey`,可以传任何能被序列化的值，一般来说传请求的地址这个字符串即可。
+-   `queryFn` 一个返回Promise的**异步函数**，函数的参数就是queryKey,如果queryKey是数组类型，queryKey数组会被展开一个个地传入(使用拓展操作符...)，否则直接传给queryFn。
 
 ```tsx
 import Axios from "axios";
@@ -66,13 +71,15 @@ import { defineComponent } from "vue";
 import { useQuery } from "./useQuery";
 const Todos = defineComponent({
     setup() {
-        const query = useQuery<string[]>("/api/test", (url) => {
-            return Axios.get({ url }).then((value) => value.data);
+        const page = 2
+        const query = useQuery<string[]>(["/api/data",page], (url,page) => {
+            return Axios.get({ url: url + "?page=" + page }).then((value) => value.data);
         });
         return () => {
             if (query.isLoading) {
                 return <div>Loading...</div>;
             }
+            // 出现错误时，渲染错误信息
             if (query.error) {
                 return <div>{query.error.message}</div>;
             }
@@ -90,13 +97,12 @@ const Todos = defineComponent({
 });
 ```
 
-## watch query key
+## 观察queryKey
 
-if query key changed, it will automatically refetch from server for newest value.
-you can pass a Ref value to query key. so that it can be watched.
-I recommend to use compted to get a ref value.
-when click next page button, it will refetch for next page data.
+如果`queryKey`改变了，`vue-query`会自动向服务端请求最新的数据，为了使`vue-query`可以观察到`queryKey`的改变，你需要传递一个Ref类型
+的值给`queryKey`,推荐使用computed方法来得到这个Ref类型的值。
 
+点击下一页时，自动请求下一页数据
 ```tsx
 import Axios from "axios";
 import { defineComponent, ref, computed } from "vue";
@@ -105,9 +111,10 @@ const Todos = defineComponent({
     setup() {
         const page = ref(1);
         const query = useQuery<string[]>(
+            // 这里将会观察page的值，page改变重新请求
             computed(() => ["/api/articles", page.value]),
-            (url) => {
-                return Axios.get({ url }).then((value) => value.data);
+            (url,page) => {
+                return Axios.get({ url: url + "/" + page }).then((value) => value.data);
             }
         );
         return () => {
@@ -124,6 +131,7 @@ const Todos = defineComponent({
                             <li>{todo}</li>
                         ))}
                     </ul>
+                    // 改变页码
                     <button onClick={() => page.value++}>next page</button>
                 </div>
             );
@@ -132,7 +140,7 @@ const Todos = defineComponent({
 });
 ```
 
-##using a Query Object instead of parameters
+## 也可以传入一个对象来请求
 
 ```tsx
 useQuery({
@@ -142,11 +150,11 @@ useQuery({
 });
 ```
 
-## Parallel Queries
+## 并行请求
 
-this library is built to require **no extra effort** for making parallel queries
+`vue-query`开箱即用地支持并行请求
 
-## Dependent Queries
+## 依赖请求
 
 Dependent queries are queries thar depend on previous ones to finish before they can execute.
 
