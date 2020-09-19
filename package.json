@@ -38,6 +38,7 @@
     "less": "^3.0.4",
     "less-loader": "^5.0.0",
     "prettier": "^2.1.1",
+    "rollup": "^2.27.1",
     "typescript": "~3.9.3",
     "vue-jest": "^5.0.0-alpha.3",
     "vue-template-compiler": "^2.6.12"
