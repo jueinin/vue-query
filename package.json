@@ -1,12 +1,23 @@
 {
-  "name": "vue-query",
+  "name": "@jueinin/vue-query",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
+  },
+  "keywords": ["vue","network query","query"],
+  "homepage": "https://github.com/jueinin/vue-query",
+  "files": [
+    "build"
+  ],
+  "browser": "build/cjs/vue-query-cjs.js",
+  "main": "build/cjs/vue-query-cjs.js",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/jueinin/vue-query"
   },
   "dependencies": {
     "core-js": "^3.6.5",
@@ -15,6 +26,7 @@
     "vuex": "^4.0.0-0"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^9.0.0",
     "@testing-library/vue": "^5.0.4",
     "@types/jest": "^24.0.19",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
@@ -39,6 +51,9 @@
     "less-loader": "^5.0.0",
     "prettier": "^2.1.1",
     "rollup": "^2.27.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.27.2",
     "typescript": "~3.9.3",
     "vue-jest": "^5.0.0-alpha.3",
     "vue-template-compiler": "^2.6.12"

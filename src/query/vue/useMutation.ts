@@ -46,7 +46,7 @@ export const useMutation = <Variable, Data, Error, MutableValue>(
         }else {
             mutableValueRef.value = actualConfig.onMutate(variable);
         }
-        mutationFn(variable)
+        return mutationFn(variable)
             .then((value) => {
                 setSuccessStatus(value);
                 if (config?.onSuccess) {
