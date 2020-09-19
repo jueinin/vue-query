@@ -10,50 +10,6 @@ beforeEach(() => {
     queryCache.clear();
 });
 describe("useQuery", () => {
-    /**
-     * 结论： ref只适用于基础值，并且ref只能使用ref.value来修改值，否则响应性必挂，智障的一笔
-     * ref 必须使用基础值，不然一堆响应式的bug
-     * note 说白了就是所有需要被响应的数据都应该套上一层ref或者reactive,然后必须操作这个reactive之后的数据，操作原数据是没有任何响应性的
-     */
-    // it('ref', async function () {
-    //     const hook = renderHook(() => {
-    //         const state = {
-    //             count: 88
-    //         }
-    //         const r = ref(state);
-    //         watch(r, value => {
-    //             console.log(value)
-    //         },{immediate: true});
-    //         return {
-    //             change: () =>r.value.count++,
-    //             r,
-    //             state
-    //         }
-    //     });
-    //     // @ts-ignore
-    //     expect(hook.vm.r.count).toEqual(88)
-    //     await hook.vm.change();
-    //     // @ts-ignore
-    //     expect(hook.vm.r.count).toEqual(89)
-    //     console.log(hook.vm.state);
-    // });
-    // it('reactive', async function () {
-    //     const wrapper = renderHook(() => {
-    //         const counter = {
-    //             count: 88
-    //         }
-    //         const state = reactive(counter);
-    //         watch(state, console.log);
-    //         return {
-    //             state, change: () => counter.count++,counter
-    //         };
-    //     });
-    //     expect(wrapper.vm.state.count).toEqual(88);
-    //     await wrapper.vm.change();
-    //     expect(wrapper.vm.state.count).toEqual(89);
-    //     console.log(wrapper.vm.counter)
-    // });
-    //
     it("when passed a plain value(not a ref) as queryKey, it should works too", async function () {
         const fn = jest.fn().mockRejectedValue("ddd");
         const hook = renderHook(() => {

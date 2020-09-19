@@ -1,6 +1,7 @@
 import {
     BaseQueryConfig,
-    CacheStaleStatus, PlainBaseQueryConfig,
+    CacheStaleStatus,
+    PlainBaseQueryConfig,
     PlainQueryKey,
     QueryFn,
     QueryResult,
@@ -53,7 +54,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
      */
     let execTimes = 0;
     let clearIntervalNum: number | undefined;
-    function exec(newValue: readonly [PlainQueryKey, Pick<PlainBaseQueryConfig, "enabled"|"refetchInterval">]) {
+    function exec(newValue: readonly [PlainQueryKey, Pick<PlainBaseQueryConfig, "enabled" | "refetchInterval">]) {
         if (!config.value.enabled) {
             return;
         }
@@ -173,18 +174,19 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
                 .finally(() => {
                     result.isFetching = false;
                     queryGlobal.removeIsFetching();
+                    result.status = QueryStatus.Idle;
                 });
         }
-        function handleRefetchInterval(){
+        function handleRefetchInterval() {
             let shouldRefetch: boolean;
             if (config.value.refetchIntervalInBackground) {
-                shouldRefetch=true
-            }else {
+                shouldRefetch = true;
+            } else {
                 shouldRefetch = !document.hidden;
             }
             if (config.value.refetchInterval !== false) {
-                clearIntervalNum=setInterval(() => {
-                    shouldRefetch && fetch()
+                clearIntervalNum = setInterval(() => {
+                    shouldRefetch && fetch();
                 }, config.value.refetchInterval);
             }
         }

@@ -2,6 +2,8 @@ import { renderHook } from "../../../../tests/utils";
 import { useMutation } from "@/query/vue/useMutation";
 import flushPromises from "flush-promises/index";
 import { QueryStatus } from "@/query/core/types";
+import { config } from '@vue/test-utils';
+import { defineComponent, render } from 'vue';
 
 const variableValue = "ddd";
 const response = "dd";
@@ -83,4 +85,20 @@ describe("useMutation", () => {
             })
         );
     });
+    test("mutation config should override useMutation config",async ()=> {
+        const useMutationMutate = jest.fn()
+        const mutateOnMutate = jest.fn()
+        const hook = renderHook(()=>{
+            const mutation = useMutation(()=>Promise.resolve("ds"),{
+                onMutate: useMutationMutate
+            })
+            return {mutation}
+        })
+        hook.vm.mutation.mutate(null,{
+            onMutate: mutateOnMutate
+        })
+        await flushPromises()
+        expect(useMutationMutate).toHaveBeenCalledTimes(0)
+        expect(mutateOnMutate).toHaveBeenCalledTimes(1)
+    })
 });

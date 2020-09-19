@@ -67,8 +67,8 @@ export enum CacheStaleStatus {
 }
 
 export type PlainMutationConfig<Variable,Data,Error,MutateValue=any> = {
-    onMutate?: (variable: Variable)=>MutateValue,
-    onSuccess?: (data: Data, variable: Variable) => void,
-    onError?: (error: Error,variable: Variable,mutableValue: MutateValue)=>void,
-    onSettled?: (data:Data,error: Error,variable: Variable,mutableValue: MutateValue)=>void
+    onMutate?: (variable?: Variable)=>MutateValue,
+    onSuccess?: (data: Data, variable?: Variable) => void,
+    onError?: (error: Error,variable?: Variable,mutableValue?: MutateValue)=>void,
+    onSettled?: (data:Data | undefined ,error: Error| undefined,variable?: Variable,mutableValue?: MutateValue)=>void
 }

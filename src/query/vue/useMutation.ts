@@ -4,7 +4,7 @@ import { reactive, ref } from "vue";
 
 export const getMutationConfig = () => {};
 export const useMutation = <Variable, Data, Error, MutableValue>(
-    mutationFn: (variable: Variable) => Promise<Data>,
+    mutationFn: (variable?: Variable) => Promise<Data>,
     config?: PlainMutationConfig<Variable, Data, Error, MutableValue>
 ) => {
     const actualConfig: typeof defaultMutationConfig = Object.assign({}, defaultMutationConfig, config);
@@ -25,32 +25,50 @@ export const useMutation = <Variable, Data, Error, MutableValue>(
         status: QueryStatus.Idle,
     });
     const mutableValueRef = ref<MutableValue | undefined>(undefined);
-    const setSuccessStatus = (value: Data, variable: Variable): void => {
+    const setSuccessStatus = (value: Data): void => {
         result.data = value;
         result.isSuccess = true;
         result.status = QueryStatus.Success;
-        actualConfig.onSuccess(value, variable);
+        // actualConfig.onSuccess(value, variable);
     };
-    const setErrorStatus = (error: Error, variable: Variable) => {
+    const setErrorStatus = (error: Error) => {
         result.error = error;
         result.isError = true;
         result.status = QueryStatus.Error;
-        actualConfig.onError(error, variable, mutableValueRef.value);
+        // actualConfig.onError(error, variable, mutableValueRef.value);
     };
 
-    const mutate = (variable: Variable) => {
+    const mutate = (variable?: Variable, config?: PlainMutationConfig<Variable, Data, Error, MutableValue>) => {
         result.status = QueryStatus.Loading;
         result.isLoading = true;
-        mutableValueRef.value = actualConfig.onMutate(variable);
+        if(config?.onMutate) {
+            config.onMutate(variable)
+        }else {
+            mutableValueRef.value = actualConfig.onMutate(variable);
+        }
         mutationFn(variable)
             .then((value) => {
-                setSuccessStatus(value, variable);
+                setSuccessStatus(value);
+                if (config?.onSuccess) {
+                    config.onSuccess(value,variable)
+                }else {
+                    actualConfig.onSuccess(value,variable)
+                }
             })
             .catch((error: Error) => {
-                setErrorStatus(error, variable);
+                setErrorStatus(error);
+                if (config?.onError) {
+                    config.onError(error,variable,mutableValueRef.value as MutableValue)
+                }else {
+                    actualConfig.onError(error,variable,mutableValueRef.value)
+                }
             })
             .finally(() => {
-                actualConfig.onSettled(result.data, result.error, variable, mutableValueRef.value);
+                if (config?.onSettled) {
+                    config.onSettled(result.data,result.error,variable,mutableValueRef.value as MutableValue)
+                }else {
+                    actualConfig.onSettled(result.data,result.error,variable,mutableValueRef.value)
+                }
                 result.isLoading = false;
             });
     };
