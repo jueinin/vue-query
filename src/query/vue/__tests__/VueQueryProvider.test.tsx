@@ -1,31 +1,44 @@
-import { defineComponent, inject, Ref } from "vue"
-import { VueQueryProvider } from "../VueQueryProvider"
-import { PlainBaseQueryConfig } from "../../core/types"
-import { mount } from "@vue/test-utils"
-
-describe("test the provider",()=> {
-    test("child should get config of parent provider",async ()=> {
+import { defineComponent, inject, Ref, Suspense } from "vue";
+import { VueQueryProvider } from "../VueQueryProvider";
+import { PlainBaseQueryConfig } from "../../core/types";
+import { mount, flushPromises } from "@vue/test-utils";
+import { useQuery } from "../useQuery";
+describe("test the provider", () => {
+    const renderWithContext = (config: PlainBaseQueryConfig, setup: any) => {
         const Child = defineComponent({
-            setup() {
-                const config: Ref<PlainBaseQueryConfig> | undefined = inject('config')
-                expect(config!.value).toEqual({enabled: false})
-                return ()=><div class="fvhg">
-                    test
-                </div>
-            }
-        })
+            setup,
+        });
         const Parent = defineComponent({
             setup() {
-                return ()=> {
-                    return <div>
-                        <VueQueryProvider config={{enabled: false}}>
-                            <Child/>
+                return () => (
+                    <div>
+                        <VueQueryProvider config={config}>
+                            <Suspense>
+                                <Child />
+                            </Suspense>
                         </VueQueryProvider>
                     </div>
-                }
-            }
-        })
-        const hook = mount(Parent)
-        console.log("sda")
-    })
-})
+                );
+            },
+        });
+        return mount(Parent);
+    };
+    test("child should get config of parent provider", async () => {
+        const config = { enabled: false };
+        renderWithContext(config, () => {
+            const configRef: Ref<PlainBaseQueryConfig> | undefined = inject("vueQueryConfig");
+            expect(configRef!.value).toEqual(config);
+            return () => <div></div>;
+        });
+    });
+    test("user defined config should override context config", async () => {
+        const onSuccess = jest.fn();
+        const config: PlainBaseQueryConfig = { onSuccess };
+        renderWithContext(config, async () => {
+            useQuery("ddd", () => Promise.resolve("dd"));
+            await flushPromises();
+            expect(onSuccess).toHaveBeenCalledTimes(1);
+            return () => <div></div>;
+        });
+    });
+});

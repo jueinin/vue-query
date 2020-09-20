@@ -8,7 +8,11 @@
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
-  "keywords": ["vue","network query","query"],
+  "keywords": [
+    "vue",
+    "network query",
+    "query"
+  ],
   "homepage": "https://github.com/jueinin/vue-query",
   "files": [
     "build"
@@ -16,8 +20,8 @@
   "browser": "build/cjs/vue-query-cjs.js",
   "main": "build/cjs/vue-query-cjs.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/jueinin/vue-query"
+    "type": "git",
+    "url": "https://github.com/jueinin/vue-query"
   },
   "dependencies": {
     "core-js": "^3.6.5",
@@ -49,7 +53,7 @@
     "fp-ts": "^2.8.2",
     "less": "^3.0.4",
     "less-loader": "^5.0.0",
-    "prettier": "^2.1.1",
+    "prettier": "^2.1.2",
     "rollup": "^2.27.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-node-resolve": "^5.2.0",

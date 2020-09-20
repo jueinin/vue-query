@@ -19,7 +19,7 @@
 -   [Queries](#queries)
 -   [缓存](#缓存)
 -   [Mutation](#useMutation)
--   [API指南](#api指南)
+-   [API 指南](#api指南)
 
 # 安装
 
@@ -239,7 +239,7 @@ const query = useQuery("/api/test", (url) => {
 ```tsx
 import { useIsFetching } from "@jueinin/vue-query";
 import { defineComponent } from "vue";
-import { NetworkIndicator } from "someUILib
+import { NetworkIndicator } from "someUILib"
 const App = defineComponent({
     setup() {
         const globalIsFetching = useIsFetching();
@@ -309,7 +309,7 @@ const App = defineComponent({
         const createTodoMutation = useMutation((todo: {title: string})=>Axios.post({
             url: '/api/createTodo',
             data: todo
-        })，{
+        }),{
             onSuccess: (data)=> {
                 alert("创建成功！")
             }
@@ -317,7 +317,7 @@ const App = defineComponent({
         return ()=> {
             return <div onClick={()=>{
                 // 传递一个todo
-                createTodoMutation.mutate({title: "write doc!"}，{
+                createTodoMutation.mutate({title: "write doc!"},{
                     // mutate的回调会覆盖useMutation的回调。上面的回调不会生效
                     onSuccess: (data)=> {
                         alert("我会覆盖掉上面的onSuccess回调")
@@ -329,7 +329,7 @@ const App = defineComponent({
 })
 ```
 
-# api指南
+# api 指南
 
 ## `useQuery`
 
@@ -422,7 +422,7 @@ const query = useQuery(queryKey, queryFn, config);
     -   `cancel`: ()=>void
         -   取消请求，仅当 queryFn 返回的 Promise 有 cancel 方法时可用。你需要通过 cancelToken 等方式自定义一个 promise.cancel 方法
 
-## `useMutation`
+#$ useMutation
 
 一般用于 post 请求，只有在调用返回值的 mutate 方法时才执行。
 
@@ -432,10 +432,10 @@ import {defineComponent} from 'vue'
 const App = defineComponent({
     setup() {
         const mutation = useMutation(()=>Promise.resolve("data"), {
-                onError: ()=>void,
-                onSuccess: ()=>void,
-                onSettled: ()=>void,
-                onMutate: ()=>void,
+                onError: ()=>void 0,
+                onSuccess: ()=>void 0,
+                onSettled: ()=>void 0,
+                onMutate: ()=>void 0,
             });
         return () => {
             // 注意不要直接写成onClick={mutation.mutate}, 这样mutate方法会被传入一个event对象
@@ -453,21 +453,48 @@ const App = defineComponent({
     -   mutationFn 返回 Promise，通过它来发起请求，参数由返回值的 mutate 方法传入
 -   config: object
     ```tsx
-    type PlainMutationConfig<Variable,Data,Error,MutateValue=any> = { 
+    type PlainMutationConfig<Variable, Data, Error, MutateValue = any> = {
         // 发送请求时触发
-        onMutate?: (variable?: Variable)=>MutateValue, 
-        onSuccess?: (data: Data, variable?: Variable) => void,
-        onError?: (error: Error,variable?: Variable,mutableValue?: MutateValue)=>void,
+        onMutate?: (variable?: Variable) => MutateValue;
+        onSuccess?: (data: Data, variable?: Variable) => void;
+        onError?: (error: Error, variable?: Variable, mutableValue?: MutateValue) => void;
         // 请求结束后触发
-        onSettled?: (data:Data | undefined ,error: Error| undefined,variable?: Variable,mutableValue?: MutateValue)=>void }
-    `
+        onSettled?: (data: Data | undefined, error: Error | undefined, variable?: Variable, mutableValue?: MutateValue) => void;
+    };
     ```
 -   mutation: 返回值
     -   data: Data | undefined
-        -   返回的数据，默认undefined
+        -   返回的数据，默认 undefined
     -   error: Error | undefined
-        -   错误信息， 默认undefined
+        -   错误信息， 默认 undefined
     -   isError: boolean
     -   isLoading: boolean
     -   isSuccess: boolean
     -   status: "loading" | "success" | "error"
+
+# VueQueryProvider
+
+context，用于配置全局 config，可以在这里设置全局的 config，例如设置全局的 stateTime。
+
+```tsx
+const Child = defineComponent({
+    setup() {
+        // useQuery将会使用staleTime5000的config
+        const query = useQuery("api/test", jest.fn().mockResolvedValue("dd"));
+        return () => <div></div>;
+    },
+});
+const Parent = defineComponent({
+    setup() {
+        return () => (
+            <div>
+                <VueQueryProvider config={{ staleTime: 5000 }}>
+                    <Suspense>
+                        <Child />
+                    </Suspense>
+                </VueQueryProvider>
+            </div>
+        );
+    },
+});
+```
