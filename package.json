@@ -24,8 +24,8 @@
     "type": "git",
     "url": "https://github.com/jueinin/vue-query"
   },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "dependencies": {
-    "@rollup/plugin-babel": "^5.2.1",
     "core-js": "^3.6.5",
     "vue": "^3.0.0-0",
     "vue-router": "^4.0.0-0",
