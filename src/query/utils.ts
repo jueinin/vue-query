@@ -5,7 +5,7 @@ export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(
     ...args: any[]
 ): [Ref<PlainQueryKey>, QueryFn<PlainKey, TResult>, Ref<Required<PlainBaseQueryConfig>>] => {
     let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn<PlainKey, TResult>, config: Ref<Required<PlainBaseQueryConfig>>;
-    const contextConfigRef: Ref<PlainBaseQueryConfig> | undefined = inject("vueQueryConfig");
+    const contextConfigRef: Ref<PlainBaseQueryConfig> = inject<Ref<PlainBaseQueryConfig>>("vueQueryConfig",ref({}));
     if (args.length == 1 && typeof args[0] === "object") {
         // object parameter
         const arg: UseQueryObjectConfig<PlainKey> = args[0];

@@ -4,7 +4,7 @@
   "private": false,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "rollup -c rollup.config.js",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint"
   },
@@ -17,8 +17,7 @@
   "files": [
     "build"
   ],
-  "browser": "build/cjs/vue-query-cjs.js",
-  "main": "build/cjs/vue-query-cjs.js",
+  "main": "build/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/jueinin/vue-query"

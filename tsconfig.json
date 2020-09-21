@@ -29,7 +29,7 @@
     ]
   },
   "include": [
-    "src/query/*.ts",
+    "src/query/*.ts"
   ],
   "exclude": [
     "node_modules"

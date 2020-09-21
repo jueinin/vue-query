@@ -174,7 +174,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
                 .finally(() => {
                     result.isFetching = false;
                     queryGlobal.removeIsFetching();
-                    result.status = QueryStatus.Idle;
+                    // result.status = QueryStatus.Idle;
                 });
         }
         function handleRefetchInterval() {
