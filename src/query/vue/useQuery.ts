@@ -8,12 +8,12 @@ import {
     QueryStatus,
     ReFetchOptions,
     UseQueryObjectConfig,
-} from "@/query/core/types";
-import { delay, getQueryArgs, noop, useMountAndUnmount } from "@/query/utils";
+} from "../core/types";
+import { delay, getQueryArgs, noop, useMountAndUnmount } from "../utils";
 import { computed, reactive, Ref, watch } from "vue";
-import { CacheValue, queryCache } from "@/query/core/queryCache";
-import { defaultConfig, defaultReFetchOptions } from "@/query/core/config";
-import { queryGlobal } from "@/query/core/queryGlobal";
+import { CacheValue, queryCache } from "../core/queryCache";
+import { defaultConfig, defaultReFetchOptions } from "../core/config";
+import { queryGlobal } from "../core/queryGlobal";
 
 /**
  *

@@ -1,4 +1,4 @@
-import { PlainBaseQueryConfig, QueryFn, QueryKey, PlainQueryKey, UseQueryObjectConfig } from "@/query/core/types";
+import { PlainBaseQueryConfig, QueryFn, QueryKey, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
 import { defaultConfig } from "./core/config";
 import { Ref, onMounted, onUnmounted, onBeforeUpdate, onUpdated, watch, isRef, ref, computed, inject } from "vue";
 export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(

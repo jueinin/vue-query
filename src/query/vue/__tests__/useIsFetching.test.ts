@@ -1,7 +1,6 @@
-import { mount } from "@vue/test-utils";
-import { useIsFetching } from "@/query/vue/useIsFetching";
-import { useQuery } from "@/query/vue/useQuery";
-import { ref, Ref, reactive, computed } from "vue";
+import { useIsFetching } from "../useIsFetching";
+import { useQuery } from "../useQuery";
+import { ref } from "vue";
 import flushPromises from "flush-promises/index";
 import {renderHook} from "../../../../tests/utils";
 

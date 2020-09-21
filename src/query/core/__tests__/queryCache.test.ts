@@ -1,5 +1,5 @@
-import {createCacheValue, queryCache} from "@/query/core/queryCache";
-import {defaultConfig} from "@/query/core/config";
+import {createCacheValue, queryCache} from "../queryCache";
+import {defaultConfig} from "../config";
 import objectContaining = jasmine.objectContaining;
 
 jest.useFakeTimers();

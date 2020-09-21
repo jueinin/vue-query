@@ -1,5 +1,6 @@
-import { computed, defineComponent, provide } from "vue";
+import {computed, defineComponent, provide,h } from "vue";
 import { PlainBaseQueryConfig } from "../core/types";
+
 type Props = {config: PlainBaseQueryConfig}
 // @ts-ignore
 const VueQueryProvider = defineComponent<Props>({
@@ -9,10 +10,8 @@ const VueQueryProvider = defineComponent<Props>({
             "vueQueryConfig",
             computed(()=>props.config)
         );
-        return () => {
-            return <div>{context.slots.default()}</div>;
-        };
     },
+    template: `<div>{{this.$slots.default}}</div>`
 });
 
 export { VueQueryProvider };

@@ -1,4 +1,4 @@
-import { defaultConfig } from "@/query/core/config";
+import { defaultConfig } from "../core/config";
 
 export type CacheValue<T = any> = {
     storeTime: number;

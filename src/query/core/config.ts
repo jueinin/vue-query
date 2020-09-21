@@ -1,4 +1,4 @@
-import {PlainBaseQueryConfig, PlainMutationConfig, ReFetchOptions} from "@/query/core/types";
+import {PlainBaseQueryConfig, PlainMutationConfig, ReFetchOptions} from "../core/types";
 import { noop } from '../utils';
 export const defaultRetryDelay = (failCount: number) => Math.min(1000 * 2 ** failCount, 30000);
 export const defaultConfig: Required<PlainBaseQueryConfig> = {

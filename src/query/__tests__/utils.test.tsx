@@ -1,5 +1,5 @@
-import { delay, getQueryArgs, getValueFromRefOrNot } from "@/query/utils";
-import { defaultConfig } from "@/query/core/config";
+import { delay, getQueryArgs, getValueFromRefOrNot } from "../utils";
+import { defaultConfig } from "../core/config";
 import flushPromises from "flush-promises/index";
 import { pipe } from "fp-ts/pipeable";
 import { array } from "fp-ts";

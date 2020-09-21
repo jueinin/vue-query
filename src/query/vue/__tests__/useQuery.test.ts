@@ -1,10 +1,10 @@
 import { renderHook } from "../../../../tests/utils";
-import { useQuery } from "@/query/vue/useQuery";
-import { ref, toRef, reactive, watch, toRefs, computed } from "vue";
-import { CancelablePromise, QueryStatus } from "@/query/core/types";
+import { useQuery } from "../useQuery";
+import { ref, reactive, computed } from "vue";
+import { CancelablePromise, QueryStatus } from "../../core/types";
 import flushPromises from "flush-promises/index";
-import { queryCache } from "@/query/core/queryCache";
-import { defaultConfig } from "@/query/core/config";
+import { queryCache } from "../../core/queryCache";
+import { defaultConfig } from "../../core/config";
 jest.useFakeTimers();
 beforeEach(() => {
     queryCache.clear();

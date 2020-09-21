@@ -1,6 +1,6 @@
 {
   "name": "@jueinin/vue-query",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "private": false,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -15,14 +15,17 @@
   ],
   "homepage": "https://github.com/jueinin/vue-query",
   "files": [
-    "build"
+    "build",
+    "index.js"
   ],
+  "types": "build/index.d.ts",
   "main": "build/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/jueinin/vue-query"
   },
   "dependencies": {
+    "@rollup/plugin-babel": "^5.2.1",
     "core-js": "^3.6.5",
     "vue": "^3.0.0-0",
     "vue-router": "^4.0.0-0",

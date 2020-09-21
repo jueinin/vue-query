@@ -1,10 +1,10 @@
-import { MutationResult, PlainMutationConfig, QueryStatus } from "@/query/core/types";
-import { defaultMutationConfig } from "@/query/core/config";
+import { MutationResult, PlainMutationConfig, QueryStatus } from "../core/types";
+import { defaultMutationConfig } from "../core/config";
 import { reactive, ref } from "vue";
 
 export const getMutationConfig = () => {};
 export const useMutation = <Variable, Data, Error, MutableValue>(
-    mutationFn: (variable?: Variable) => Promise<Data>,
+    mutationFn: (variable: Variable) => Promise<Data>,
     config?: PlainMutationConfig<Variable, Data, Error, MutableValue>
 ) => {
     const actualConfig: typeof defaultMutationConfig = Object.assign({}, defaultMutationConfig, config);
@@ -38,7 +38,7 @@ export const useMutation = <Variable, Data, Error, MutableValue>(
         // actualConfig.onError(error, variable, mutableValueRef.value);
     };
 
-    const mutate = (variable?: Variable, config?: PlainMutationConfig<Variable, Data, Error, MutableValue>) => {
+    const mutate = (variable: Variable, config?: PlainMutationConfig<Variable, Data, Error, MutableValue>) => {
         result.status = QueryStatus.Loading;
         result.isLoading = true;
         if(config?.onMutate) {

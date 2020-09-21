@@ -1,9 +1,7 @@
 import { renderHook } from "../../../../tests/utils";
-import { useMutation } from "@/query/vue/useMutation";
+import { useMutation } from "../useMutation";
 import flushPromises from "flush-promises/index";
-import { QueryStatus } from "@/query/core/types";
-import { config } from '@vue/test-utils';
-import { defineComponent, render } from 'vue';
+import { QueryStatus } from "../../core/types";
 
 const variableValue = "ddd";
 const response = "dd";

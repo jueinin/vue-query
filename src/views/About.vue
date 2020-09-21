@@ -1,8 +1,6 @@
 
 <script lang="tsx">
 import { defineComponent, inject, Ref, ref } from "vue";
-import { useCounter } from "@/hook/useCounter";
-import { PlainBaseQueryConfig } from '@/query/core/types';
 import {VueQueryProvider} from '@/query/vue/VueQueryProvider'
 const Child = defineComponent({
             setup() {
