@@ -1,5 +1,5 @@
 import {mount} from "@vue/test-utils";
-import {useCounter} from "@/hook/useCounter";
+import {useCounter} from "../useCounter";
 describe("useCounter",()=> {
     it('initial value should be 0,and delta is 1', async function () {
         const wrapper = mount({

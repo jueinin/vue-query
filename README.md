@@ -6,16 +6,19 @@
 
 ## 功能概览
 
+-   兼容vue2和3版本,使用vue2.x版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
 -   不限数据获取方式，你可以使用其他网络请求库例如`axios`，或者`umi request`，也可以使用 HTTP 或者 graphql
 -   请求自动缓存，当数据过期或者浏览器窗口重新 focus 时自动重新从服务端获取数据
 -   并行请求、依赖请求
 -   取消请求
 -   开箱即用的滚动恢复
+-   支持tree shaking
 
 ## Documentation
 
 -   [安装](#安装)
 -   [快速上手](#快速上手)
+-   [例子](#例子)
 -   [Queries](#queries)
 -   [缓存](#缓存)
 -   [Mutation](#useMutation)
@@ -56,6 +59,15 @@ const Todos = defineComponent({
     },
 });
 ```
+
+# 例子
+
+codesandbox
+
+-   [基础请求](https://codesandbox.io/s/jichuqingqiu-vfozo)
+-   [依赖请求](https://codesandbox.io/s/yilaiqingqiu-xf19c)
+-   [取消请求](https://codesandbox.io/s/quxiaoqingqiu-srcjt)
+
 
 # Queries
 

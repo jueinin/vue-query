@@ -4,7 +4,7 @@ import { ref, reactive, computed } from "vue-demi";
 import { CancelablePromise, QueryStatus } from "../../core/types";
 import flushPromises from "flush-promises/index";
 import { queryCache } from "../../core/queryCache";
-import { defaultConfig } from "../../core/config";
+import { defaultConfig, defaultRetryDelay } from "../../core/config";
 jest.useFakeTimers();
 beforeEach(() => {
     queryCache.clear();
@@ -136,7 +136,7 @@ describe("useQuery", () => {
             // 时间再往后拉也只是3了，不会再重试
             expect(fn).toHaveBeenCalledTimes(3);
         });
-        it("disable retry", async function () {
+        it("can disable retry", async function () {
             const fn = jest.fn().mockRejectedValue("dd");
             const hook = renderHook(() => ({ query: useQuery(ref("key"), fn, { retry: false }) }));
             await flushPromises();
@@ -162,6 +162,29 @@ describe("useQuery", () => {
             jest.advanceTimersByTime(1000);
             await flushPromises();
             expect(fn).toHaveBeenCalledTimes(2);
+        });
+        it("when it is retrying, it should be loading status, and unset error status", async function() {
+            const fn = jest.fn(() => new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    reject("err");
+                }, 2000);
+            }));
+            const hook = renderHook(() => ({ query: useQuery("key", fn) }))
+            jest.advanceTimersByTime(2000);
+            await flushPromises();
+            const query = hook.vm.query;
+            expect(query.error).toEqual("err");
+            jest.advanceTimersByTime(defaultRetryDelay(1));
+            await flushPromises()
+            // begin refetch
+            expect(query.error).toBeFalsy();
+            expect(query.isLoading).toBeTruthy();
+            expect(query.status).toEqual(QueryStatus.Loading);
+            jest.advanceTimersByTime(2000);
+            await flushPromises();
+            expect(query.error).toEqual("err");
+            expect(query.isLoading).toBeFalsy();
+
         });
     });
     it("when disable, it should not request", async function () {

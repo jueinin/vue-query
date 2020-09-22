@@ -111,6 +111,10 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
             if (!cache) {
                 result.isLoading = true;
                 result.status = QueryStatus.Loading;
+                result.data = undefined;
+                result.error = undefined;
+                result.isError = false;
+                result.isSuccess = false;
             }
         }
 
@@ -141,8 +145,11 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
             if (typeof config.value.retry !== "function") {
                 result.retryCount++;
             }
-            delay(retryDelay).then(() => exec(newValue));
-            setErrorStatus(error);
+            delay(retryDelay).then(() => {
+                setLoading(undefined);
+                exec(newValue)
+            });
+
         };
         function fetch() {
             result.isFetching = true;
