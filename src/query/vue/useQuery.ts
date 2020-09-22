@@ -10,7 +10,7 @@ import {
     UseQueryObjectConfig,
 } from "../core/types";
 import { delay, getQueryArgs, noop, useMountAndUnmount } from "../utils";
-import {computed, inject, reactive, Ref, watch} from "vue";
+import {computed, inject, reactive, Ref, watch} from "vue-demi";
 import { CacheValue, queryCache } from "../core/queryCache";
 import { defaultConfig, defaultReFetchOptions } from "../core/config";
 import { queryGlobal } from "../core/queryGlobal";

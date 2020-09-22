@@ -1,6 +1,6 @@
 import { renderHook } from "../../../../tests/utils";
 import { useQuery } from "../useQuery";
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed } from "vue-demi";
 import { CancelablePromise, QueryStatus } from "../../core/types";
 import flushPromises from "flush-promises/index";
 import { queryCache } from "../../core/queryCache";

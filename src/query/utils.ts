@@ -1,6 +1,6 @@
 import { PlainBaseQueryConfig, QueryFn, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
 import { defaultConfig } from "./core/config";
-import { Ref, onMounted, onUnmounted, isRef, ref, computed, inject } from "vue";
+import { Ref, onMounted, onUnmounted, isRef, ref, computed, inject } from "vue-demi";
 export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(
     params: {args: any[],contextConfigRef: undefined | Ref<PlainBaseQueryConfig>}
 ): [Ref<PlainQueryKey>, QueryFn<PlainKey, TResult>, Ref<Required<PlainBaseQueryConfig>>] => {

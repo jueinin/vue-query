@@ -1,6 +1,6 @@
 import { MutationResult, PlainMutationConfig, QueryStatus } from "../core/types";
 import { defaultMutationConfig } from "../core/config";
-import { reactive, ref } from "vue";
+import { reactive, ref } from "vue-demi";
 
 export const getMutationConfig = () => {};
 export const useMutation = <Variable, Data, Error, MutableValue>(

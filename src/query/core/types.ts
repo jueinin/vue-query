@@ -1,4 +1,4 @@
-import { Ref } from "vue";
+import { Ref } from "vue-demi";
 export type PrimitiveType = string | number | boolean  | null | undefined | bigint | symbol
 export type PlainQueryKey = PrimitiveType | object | any[];
 export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey;

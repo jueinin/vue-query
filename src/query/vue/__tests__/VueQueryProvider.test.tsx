@@ -1,4 +1,4 @@
-import { defineComponent, inject, Ref, Suspense } from "vue";
+import { defineComponent, inject, Ref, Suspense } from "vue-demi";
 import { VueQueryProvider } from "../VueQueryProvider";
 import { PlainBaseQueryConfig } from "../../core/types";
 import { mount, flushPromises } from "@vue/test-utils";

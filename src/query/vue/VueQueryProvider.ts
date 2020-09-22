@@ -1,4 +1,4 @@
-import {computed, defineComponent, provide,h } from "vue";
+import {computed, defineComponent, provide,h } from "vue-demi";
 import { PlainBaseQueryConfig } from "../core/types";
 
 type Props = {config: PlainBaseQueryConfig}

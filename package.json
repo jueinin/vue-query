@@ -1,6 +1,6 @@
 {
     "name": "@jueinin/vue-query",
-    "version": "0.1.14",
+    "version": "0.1.19",
     "private": false,
     "scripts": {
         "serve": "vue-cli-service serve",
@@ -15,26 +15,28 @@
     ],
     "homepage": "https://github.com/jueinin/vue-query",
     "files": [
-        "build",
-        "index.js"
+        "build"
     ],
-    "types": "build/index.d.ts",
-    "main": "build/index.js",
+    "types": "build/lib/index.d.ts",
+    "main": "build/lib/index.js",
+    "module": "build/es/index.js",
     "repository": {
         "type": "git",
         "url": "https://github.com/jueinin/vue-query"
     },
     "dependencies": {
-        "core-js": "^3.6.5"
+        "vue-demi": "^0.3.3"
     },
     "peerDependencies": {
-        "vue": ">=3.0.0"
+        "@vue/composition-api": "^1.0.0-beta.1",
+        "vue": "^2.0.0 || >=3.0.0-rc.0"
     },
     "devDependencies": {
         "@babel/core": "^7.11.6",
         "@babel/plugin-proposal-class-properties": "^7.10.4",
         "@babel/preset-env": "^7.11.5",
         "@babel/preset-typescript": "^7.10.4",
+        "@rollup/plugin-alias": "^3.1.1",
         "@rollup/plugin-node-resolve": "^9.0.0",
         "@types/jest": "^24.0.19",
         "@types/node": "^14.11.2",

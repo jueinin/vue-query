@@ -1,6 +1,6 @@
 import { useIsFetching } from "../useIsFetching";
 import { useQuery } from "../useQuery";
-import { ref } from "vue";
+import { ref } from "vue-demi";
 import flushPromises from "flush-promises/index";
 import {renderHook} from "../../../../tests/utils";
 

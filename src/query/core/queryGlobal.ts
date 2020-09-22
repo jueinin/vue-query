@@ -1,4 +1,4 @@
-import { reactive } from 'vue';
+import { reactive } from 'vue-demi';
 
 class QueryGlobal {
     isFetchingArr: number[] = [];
