@@ -25,7 +25,10 @@ export default [
             resolve({
                 extensions
             }),
-            typescript()
+            typescript({
+                tsconfig: "tsconfig.build.json"
+            })
         ],
+        external: ["vue"]
     }
 ]

@@ -1,11 +1,11 @@
-import { PlainBaseQueryConfig, QueryFn, QueryKey, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
+import { PlainBaseQueryConfig, QueryFn, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
 import { defaultConfig } from "./core/config";
-import { Ref, onMounted, onUnmounted, onBeforeUpdate, onUpdated, watch, isRef, ref, computed, inject } from "vue";
+import { Ref, onMounted, onUnmounted, isRef, ref, computed, inject } from "vue";
 export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(
-    ...args: any[]
+    params: {args: any[],contextConfigRef: undefined | Ref<PlainBaseQueryConfig>}
 ): [Ref<PlainQueryKey>, QueryFn<PlainKey, TResult>, Ref<Required<PlainBaseQueryConfig>>] => {
+    const {args,contextConfigRef} = params
     let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn<PlainKey, TResult>, config: Ref<Required<PlainBaseQueryConfig>>;
-    const contextConfigRef: Ref<PlainBaseQueryConfig> = inject<Ref<PlainBaseQueryConfig>>("vueQueryConfig",ref({}));
     if (args.length == 1 && typeof args[0] === "object") {
         // object parameter
         const arg: UseQueryObjectConfig<PlainKey> = args[0];

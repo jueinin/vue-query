@@ -28,7 +28,11 @@
       "scripthost"
     ]
   },
+  "include": [
+    "src/query/**/*.ts"
+  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/query/**/__tests__/**"
   ]
 }

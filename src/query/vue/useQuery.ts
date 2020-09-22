@@ -10,7 +10,7 @@ import {
     UseQueryObjectConfig,
 } from "../core/types";
 import { delay, getQueryArgs, noop, useMountAndUnmount } from "../utils";
-import { computed, reactive, Ref, watch } from "vue";
+import {computed, inject, reactive, Ref, watch} from "vue";
 import { CacheValue, queryCache } from "../core/queryCache";
 import { defaultConfig, defaultReFetchOptions } from "../core/config";
 import { queryGlobal } from "../core/queryGlobal";
@@ -33,7 +33,8 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(
     queryObject: UseQueryObjectConfig<PlainKey, TResult, TError>
 ): QueryResult<TResult, TError>;
 export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...args: any): QueryResult<TResult, TError> {
-    const [queryKey, queryFn, config] = getQueryArgs<PlainKey, TResult>(...args);
+    const contextConfigRef: Ref<PlainBaseQueryConfig> | undefined = inject<Ref<PlainBaseQueryConfig>>("vueQueryConfig");
+    const [queryKey, queryFn, config] = getQueryArgs<PlainKey, TResult>({args, contextConfigRef});
     // the config has merged default config
     const result = reactive<QueryResult>({
         isLoading: false,
@@ -185,6 +186,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
                 shouldRefetch = !document.hidden;
             }
             if (config.value.refetchInterval !== false) {
+                // @ts-ignore
                 clearIntervalNum = setInterval(() => {
                     shouldRefetch && fetch();
                 }, config.value.refetchInterval);
