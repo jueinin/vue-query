@@ -1,10 +1,10 @@
 import { Ref } from "vue-demi";
-export type PrimitiveType = string | number | boolean  | null | undefined | bigint | symbol
+export type PrimitiveType = string | number | boolean | null | undefined | bigint | symbol;
 export type PlainQueryKey = PrimitiveType | object | any[];
 export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey;
 export type ArrayQueryKey = Ref<PlainQueryKey[]>;
-export type CancelablePromise<Value> = Promise<Value> & {cancel?: ()=>void}
-export type QueryFn<PlainKey, Value> = (...args: PlainKey extends Array<any> ? PlainKey : [PlainKey]) => CancelablePromise<Value>
+export type CancelablePromise<Value> = Promise<Value> & { cancel?: () => void };
+export type QueryFn<PlainKey, Value> = (...args: PlainKey extends Array<any> ? PlainKey : [PlainKey]) => CancelablePromise<Value>;
 export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     retry?: false | number | ((retryCount: number, error: TError) => boolean);
     retryDelay?: (failCount: number) => number;
@@ -14,10 +14,10 @@ export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     onSuccess?: (data: TResult) => void;
     onError?: (error: TError) => void;
     staleTime?: number;
-    refetchOnReconnect?: boolean
-    refetchOnWindowFocus?: boolean,
-    refetchInterval?: number | false,
-    refetchIntervalInBackground?: boolean
+    refetchOnReconnect?: boolean;
+    refetchOnWindowFocus?: boolean;
+    refetchInterval?: number | false;
+    refetchIntervalInBackground?: boolean;
 };
 export type BaseQueryConfigRef<TResult, TError> = Ref<PlainBaseQueryConfig<TResult, TError>>;
 export type BaseQueryConfig<TResult, TError> = BaseQueryConfigRef<TResult, TError> | PlainBaseQueryConfig<TResult, TError>;
@@ -46,14 +46,17 @@ export type QueryResult<Result = any, Error = any> = {
     reFetch: (options?: ReFetchOptions) => void;
     cancel: () => void;
 };
-export type MutationResult<Data,Error> = {
-    data: Data | undefined,
-    error: Error|undefined,
-    isError: boolean,
-    isLoading: boolean,
-    isSuccess: boolean,
-    status: QueryStatus
-}
+export type MutationResult<Data, Error, Variable> = {
+    data: Data | undefined;
+    error: Error | undefined;
+    isError: boolean;
+    isLoading: boolean;
+    isSuccess: boolean;
+    status: QueryStatus;
+    cancel: () => void;
+    reset: () => void;
+    mutate: (variable: Variable, config?: PlainMutationConfig<Variable, Data, Error>) => CancelablePromise<Data>;
+};
 
 export type UseQueryObjectConfig<PlainKey extends PlainQueryKey, Result = any, Error = any> = {
     queryKey: PlainKey | Ref<PlainKey>;
@@ -66,9 +69,9 @@ export enum CacheStaleStatus {
     notStaled = "notStaled",
 }
 
-export type PlainMutationConfig<Variable,Data,Error,MutateValue=any> = {
-    onMutate?: (variable: Variable)=>MutateValue,
-    onSuccess?: (data: Data, variable: Variable) => void,
-    onError?: (error: Error,variable: Variable,mutableValue: MutateValue)=>void,
-    onSettled?: (data:Data | undefined ,error: Error| undefined,variable: Variable,mutableValue: MutateValue)=>void
-}
+export type PlainMutationConfig<Variable, Data, Error> = {
+    onMutate?: (variable: Variable) => void;
+    onSuccess?: (data: Data, variable: Variable) => void;
+    onError?: (error: Error, variable: Variable) => void;
+    onSettled?: (data: Data | undefined, error: Error | undefined, variable: Variable) => void;
+};

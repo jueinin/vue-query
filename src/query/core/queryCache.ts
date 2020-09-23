@@ -10,6 +10,7 @@ export const createCacheValue = <T>(value: T): CacheValue<T> => {
         data: value,
     };
 };
+// todo we need enhance the feature of query cache
 export class QueryCache {
     private map: Map<string, CacheValue> = new Map();
     addToCache = (key: string, value: CacheValue, cacheTime: number = defaultConfig.cacheTime) => {

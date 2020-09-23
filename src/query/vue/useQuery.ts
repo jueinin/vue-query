@@ -10,7 +10,7 @@ import {
     UseQueryObjectConfig,
 } from "../core/types";
 import { delay, getQueryArgs, noop, useMountAndUnmount } from "../utils";
-import {computed, inject, reactive, Ref, watch} from "vue-demi";
+import { computed, inject, reactive, Ref, watch } from "vue-demi";
 import { CacheValue, queryCache } from "../core/queryCache";
 import { defaultConfig, defaultReFetchOptions } from "../core/config";
 import { queryGlobal } from "../core/queryGlobal";
@@ -34,7 +34,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(
 ): QueryResult<TResult, TError>;
 export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...args: any): QueryResult<TResult, TError> {
     const contextConfigRef: Ref<PlainBaseQueryConfig> | undefined = inject<Ref<PlainBaseQueryConfig>>("vueQueryConfig");
-    const [queryKey, queryFn, config] = getQueryArgs<PlainKey, TResult>({args, contextConfigRef});
+    const [queryKey, queryFn, config] = getQueryArgs<PlainKey, TResult>({ args, contextConfigRef });
     // the config has merged default config
     const result = reactive<QueryResult>({
         isLoading: false,
@@ -78,7 +78,9 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
                 setSuccessStatus(cache!.data);
             }
         }
-        setLoading(cache);
+        if (!cache) {
+            setLoading();
+        }
         fetch();
         handleRefetchInterval();
 
@@ -107,15 +109,13 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
             return Date.now() - cache.storeTime < config.value.staleTime ? CacheStaleStatus.notStaled : CacheStaleStatus.staled;
         }
 
-        function setLoading(cache: CacheValue | undefined) {
-            if (!cache) {
-                result.isLoading = true;
-                result.status = QueryStatus.Loading;
-                result.data = undefined;
-                result.error = undefined;
-                result.isError = false;
-                result.isSuccess = false;
-            }
+        function setLoading() {
+            result.isLoading = true;
+            result.status = QueryStatus.Loading;
+            result.data = undefined;
+            result.error = undefined;
+            result.isError = false;
+            result.isSuccess = false;
         }
 
         function reFetch(options: ReFetchOptions | undefined) {
@@ -146,10 +146,9 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
                 result.retryCount++;
             }
             delay(retryDelay).then(() => {
-                setLoading(undefined);
-                exec(newValue)
+                setLoading();
+                exec(newValue);
             });
-
         };
         function fetch() {
             result.isFetching = true;

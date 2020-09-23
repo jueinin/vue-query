@@ -6,7 +6,7 @@
 
 ## 功能概览
 
--   兼容vue2和3版本,使用vue2.x版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
+-   兼容vue2和3版本。使用vue2.x版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
 -   不限数据获取方式，你可以使用其他网络请求库例如`axios`，或者`umi request`，也可以使用 HTTP 或者 graphql
 -   请求自动缓存，当数据过期或者浏览器窗口重新 focus 时自动重新从服务端获取数据
 -   并行请求、依赖请求
@@ -299,7 +299,7 @@ const App = defineComponent({
             mutation.mutate();
         };
         return () => {
-            return <div onClick={requestData}>点击获取数据。数据： {mutation.result.data}</div>;
+            return <div onClick={requestData}>点击获取数据。数据： {mutation.data}</div>;
         };
     },
 });
@@ -483,6 +483,8 @@ const App = defineComponent({
     -   isLoading: boolean
     -   isSuccess: boolean
     -   status: "loading" | "success" | "error"
+    -   reset: ()=>void
+        -   初始化状态，将data,error,isError,isSuccess,status设置为
 
 # VueQueryProvider
 
