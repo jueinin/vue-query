@@ -434,7 +434,7 @@ const query = useQuery(queryKey, queryFn, config);
     -   `cancel`: ()=>void
         -   取消请求，仅当 queryFn 返回的 Promise 有 cancel 方法时可用。你需要通过 cancelToken 等方式自定义一个 promise.cancel 方法
 
-#$ useMutation
+# useMutation
 
 一般用于 post 请求，只有在调用返回值的 mutate 方法时才执行。
 
@@ -511,4 +511,11 @@ const Parent = defineComponent({
         );
     },
 });
+```
+
+# useIsFetching
+返回是否全局中有请求正在处理。
+```tsx
+ import { useIsFetching } from '@jueinin/vue-query'
+ const isFetching: Ref<boolean> = useIsFetching()
 ```
