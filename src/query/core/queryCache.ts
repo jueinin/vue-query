@@ -1,4 +1,6 @@
-import { defaultConfig } from "../core/config";
+import { defaultConfig } from "./config";
+import objectHash from 'object-hash';
+import { PlainQueryKey, QueryKey } from "./types";
 
 export type CacheValue<T = any> = {
     storeTime: number;
@@ -11,19 +13,27 @@ export const createCacheValue = <T>(value: T): CacheValue<T> => {
     };
 };
 // todo we need enhance the feature of query cache
+/**
+ * 1. when update cache, the ui should update too
+ * 2.
+ */
 export class QueryCache {
     private map: Map<string, CacheValue> = new Map();
-    addToCache = (key: string, value: CacheValue, cacheTime: number = defaultConfig.cacheTime) => {
-        this.map.set(key, value);
+    addToCache = (queryKey: any, value: CacheValue, cacheTime: number = defaultConfig.cacheTime) => {
+        const hash:string = objectHash(queryKey);
+        this.map.set(hash, value);
         setTimeout(() => {
-            this.removeFromCache(key);
+            this.removeFromCache(queryKey);
         }, cacheTime);
     };
-    removeFromCache = (key: string): void => {
-        this.map.delete(key);
+    removeFromCache = (queryKey: string): void => {
+        this.map.delete(queryKey);
     };
-    getCache = <T = any>(key: string): CacheValue<T> | undefined => {
-        return this.map.get(key);
+    hasCache = (key: any) => {
+
+    }
+    getCache = <T = any>(queryKey: any): CacheValue<T> | undefined => {
+        return this.map.get(objectHash(queryKey));
     };
     clear = () => {
         this.map.clear();

@@ -1,7 +1,7 @@
 import { CancelablePromise, MutationResult, PlainMutationConfig, QueryStatus } from "../core/types";
 import { defaultMutationConfig } from "../core/config";
 import { reactive, ref } from "vue-demi";
-
+// todo add rollback fn for optimization update, and handle the optional Variable generic
 export const useMutation = <Variable, Data, Error, MutableValue>(
     mutationFn: (variable: Variable) => CancelablePromise<Data>,
     config?: PlainMutationConfig<Variable, Data, Error>

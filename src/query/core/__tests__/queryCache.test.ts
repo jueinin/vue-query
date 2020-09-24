@@ -12,4 +12,7 @@ describe("queryCache",()=> {
         expect(deleteMethod).toHaveBeenLastCalledWith("key");
         expect(queryCache.getCache("key")).toEqual(undefined);
     });
+    test("when change query cache data, the views should update too!",async () => {
+
+    })
 })

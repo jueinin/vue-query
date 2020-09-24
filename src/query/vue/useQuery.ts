@@ -14,7 +14,8 @@ import { computed, inject, reactive, Ref, watch } from "vue-demi";
 import { CacheValue, queryCache } from "../core/queryCache";
 import { defaultConfig, defaultReFetchOptions } from "../core/config";
 import { queryGlobal } from "../core/queryGlobal";
-
+import objectHash from 'object-hash';
+// todo i need do that, when change queryCache,the view should update
 /**
  *
  * @param queryKey it must be a ref value,because we can not watch a normal value
@@ -63,8 +64,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
         clearInterval(clearIntervalNum);
         result.reFetch = reFetch;
         const shouldHandleInitialData: boolean = config.value.initialData !== undefined && execTimes === 1;
-        const queryKeyStr: string = JSON.stringify(queryKey.value ?? "");
-        const cache: CacheValue | undefined = queryCache.getCache<TResult>(queryKeyStr);
+        const cache: CacheValue | undefined = queryCache.getCache<TResult>(queryKey.value);
         const hasCache: boolean = cache !== undefined;
         if (shouldHandleInitialData) {
             handleInitialData();
@@ -168,7 +168,7 @@ export function useQuery<PlainKey extends PlainQueryKey, TResult, TError>(...arg
             promise
                 .then((value) => {
                     setSuccessStatus(value);
-                    queryCache.addToCache(queryKeyStr, { storeTime: Date.now(), data: value }, config.value.cacheTime);
+                    queryCache.addToCache(queryKey.value, { storeTime: Date.now(), data: value }, config.value.cacheTime);
                     return value;
                 })
                 .catch((error) => {

@@ -2,6 +2,7 @@ import {  getQueryArgs } from "../utils";
 import { defaultConfig } from "../core/config";
 import { pipe } from "fp-ts/pipeable";
 import { array } from "fp-ts";
+import objectHash from "object-hash";
 describe("test utils function", () => {
     describe("getQueryArgs", () => {
         it("should parse different forms of params", function () {
@@ -32,5 +33,9 @@ describe("test utils function", () => {
                 (c) => expect(c).toEqual([[{ dd: "d" }], Object.assign({}, defaultConfig, { retry: 5 })])
             );
         });
+    });
+    it("object hash", function() {
+        console.log(objectHash({}));
+        console.log(objectHash({}));
     });
 });
