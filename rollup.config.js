@@ -1,5 +1,6 @@
 import resolve from "rollup-plugin-node-resolve";
 import typescript from "rollup-plugin-typescript2";
+import commonjs from '@rollup/plugin-commonjs';
 const extensions = [".ts", ".tsx"];
 export default [
     {
@@ -21,6 +22,7 @@ export default [
             typescript({
                 tsconfig: "tsconfig.build.json",
             }),
+            commonjs()
         ],
         external: ["vue","vue-demi"],
     },

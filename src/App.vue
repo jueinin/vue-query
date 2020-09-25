@@ -1,35 +1,20 @@
-<template>
-  <div id="app">
-    <div id="nav">
-      App
-    </div>
-  </div>
-</template>
-<script lang="ts">
-import {defineComponent} from 'vue'
+<script lang="tsx">
+import {defineComponent, reactive} from 'vue'
 export default defineComponent({
-
-})
-</script>
-<style lang="less">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+  setup() {
+    const state = reactive({
+      count: {
+        count: 2
+      }
+    });
+    const countObj = state.count;
+    const changeCount = () => countObj.count++;
+    return () => {
+      return <div>
+        <div>{state.count.count}</div>
+        <button onClick={()=>changeCount()}>change count</button>
+      </div>
     }
   }
-}
-</style>
+})
+</script>

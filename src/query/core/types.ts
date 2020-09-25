@@ -58,7 +58,7 @@ export type MutationResult<Data, Error, Variable> = {
     mutate: (variable: Variable, config?: PlainMutationConfig<Variable, Data, Error>) => CancelablePromise<Data>;
 };
 
-export type UseQueryObjectConfig<PlainKey extends PlainQueryKey, Result = any, Error = any> = {
+export type UseQueryObjectConfig<PlainKey = PlainQueryKey, Result = any, Error = any> = {
     queryKey: PlainKey | Ref<PlainKey>;
     queryFn: QueryFn<PlainKey, Result>;
     config?: BaseQueryConfig<Result, Error>;
@@ -75,3 +75,4 @@ export type PlainMutationConfig<Variable, Data, Error> = {
     onError?: (error: Error, variable: Variable) => void;
     onSettled?: (data: Data | undefined, error: Error | undefined, variable: Variable) => void;
 };
+export type NotFunction<T> = T extends Function ? never : T;

@@ -1,8 +1,8 @@
-import {queryGlobal} from "../core/queryGlobal";
 import { Ref, computed} from 'vue-demi';
+import { queryManager } from "../core/queryManager";
 
 export const useIsFetching = (): Ref<boolean> => {
     return computed(()=>{
-        return queryGlobal.isFetching
+        return queryManager.queryList.some(value => value.result.isFetching === true);
     })
 };

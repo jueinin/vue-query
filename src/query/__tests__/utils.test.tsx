@@ -34,8 +34,4 @@ describe("test utils function", () => {
             );
         });
     });
-    it("object hash", function() {
-        console.log(objectHash({}));
-        console.log(objectHash({}));
-    });
 });

@@ -1,10 +1,12 @@
 import { PlainBaseQueryConfig, QueryFn, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
 import { defaultConfig } from "./core/config";
 import { Ref, onMounted, onUnmounted, isRef, ref, computed, inject } from "vue-demi";
-export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(
-    params: {args: any[],contextConfigRef: undefined | Ref<PlainBaseQueryConfig>}
-): [Ref<PlainQueryKey>, QueryFn<PlainKey, TResult>, Ref<Required<PlainBaseQueryConfig>>] => {
-    const {args,contextConfigRef} = params
+const objectHash = require("object-hash/dist/object_hash.js");
+export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(params: {
+    args: any[];
+    contextConfigRef: undefined | Ref<PlainBaseQueryConfig>;
+}): [Ref<PlainQueryKey>, QueryFn<PlainKey, TResult>, Ref<Required<PlainBaseQueryConfig>>] => {
+    const { args, contextConfigRef } = params;
     let queryKey: Ref<PlainQueryKey>, queryFn: QueryFn<PlainKey, TResult>, config: Ref<Required<PlainBaseQueryConfig>>;
     if (args.length == 1 && typeof args[0] === "object") {
         // object parameter
@@ -50,4 +52,7 @@ export const useMountAndUnmount = (fn: (() => any) | (() => () => void)) => {
             unMountFn();
         }
     });
+};
+export const createHash = (value: any) => {
+    return objectHash(value);
 };
