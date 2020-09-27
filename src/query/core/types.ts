@@ -1,5 +1,6 @@
 import { Ref } from "vue-demi";
 export type PrimitiveType = string | number | boolean | null | undefined | bigint | symbol;
+// todo we should exclude ref type in plainQueryKey
 export type PlainQueryKey = PrimitiveType | object | any[];
 export type QueryKey = Ref<PlainQueryKey> | PlainQueryKey;
 export type ArrayQueryKey = Ref<PlainQueryKey[]>;
@@ -11,8 +12,10 @@ export type PlainBaseQueryConfig<TResult = any, TError = any> = {
     initialData?: TResult | (() => TResult);
     cacheTime?: number;
     enabled?: boolean;
+    onMutate?: () => void
     onSuccess?: (data: TResult) => void;
     onError?: (error: TError) => void;
+    onSettled?: (data: TResult | undefined, error: TError | undefined) => void
     staleTime?: number;
     refetchOnReconnect?: boolean;
     refetchOnWindowFocus?: boolean;
@@ -75,4 +78,4 @@ export type PlainMutationConfig<Variable, Data, Error> = {
     onError?: (error: Error, variable: Variable,rollback: any) => void;
     onSettled?: (data: Data | undefined, error: Error | undefined, variable: Variable,rollback: any) => void;
 };
-type NotFunction<T> = T extends Function ? never : T;
+export type NotFunction<T> = T extends Function ? never : T;

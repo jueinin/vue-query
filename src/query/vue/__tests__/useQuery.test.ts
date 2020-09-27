@@ -3,7 +3,7 @@ import { useQuery } from "../useQuery";
 import { ref, reactive, computed } from "vue-demi";
 import { CancelablePromise, QueryStatus } from "../../core/types";
 import flushPromises from "flush-promises/index";
-import { createCacheValue, queryCache } from "../../core/queryCache";
+import { queryCache } from "../../core/queryCache";
 import { defaultConfig, defaultRetryDelay } from "../../core/config";
 jest.useFakeTimers();
 beforeEach(() => {
@@ -107,6 +107,31 @@ describe("useQuery", () => {
             })
         );
     });
+    test("all callbacks should work",async ()=> {
+        const fn = jest.fn().mockResolvedValue('data')
+        const onMutate = jest.fn();
+        const onSuccess = jest.fn();
+        const onError = jest.fn();
+        const onSettled = jest.fn();
+        const hook = renderHook(() => {
+            const query = useQuery("key", fn, {
+                onMutate,
+                onError,
+                onSuccess,
+                onSettled
+            });
+            return {query}
+        });
+        expect(onMutate).toHaveBeenCalledTimes(1);
+        await flushPromises();
+        expect(onSuccess).toHaveBeenCalledTimes(1);
+        expect(onSettled).toHaveBeenCalledTimes(1);
+        fn.mockRejectedValue("err");
+        hook.vm.query.reFetch();
+        await flushPromises();
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onSettled).toHaveBeenCalledTimes(2);
+    })
     describe("retry", () => {
         it("default retry 3 times", async () => {
             // 每次遇见请求必须用flush promise 把resolved的promise让他执行掉，

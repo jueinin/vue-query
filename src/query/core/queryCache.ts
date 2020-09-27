@@ -1,5 +1,4 @@
 import { createHash } from "../utils";
-import { Query } from "./query";
 import { NotFunction, PlainQueryKey } from "./types";
 
 export type CacheValue<T = any> = {
@@ -8,7 +7,7 @@ export type CacheValue<T = any> = {
     getIsStaled: () => boolean;
     timeoutDeleteNum: number | undefined
 };
-export const createCacheValue = <T>(value: { data: T; staleTime: number,timeoutNum?: number }): CacheValue<T> => {
+const createCacheValue = <T>(value: { data: T; staleTime: number,timeoutNum?: number }): CacheValue<T> => {
     return {
         storeTime: Date.now(),
         data: value.data,
@@ -48,7 +47,7 @@ export class QueryCache {
     };
     updateCache: {
         <T>(queryKey: PlainQueryKey, updater: (oldData: T) => T): void;
-        <T>(queryKey: PlainQueryKey, updater: NotFunction<T>): void;
+        <T>(queryKey: PlainQueryKey, updater: T): void;
     } = <T>(queryKey: PlainQueryKey, updater: any) => {
         const cacheValue = this.map.get(createHash(queryKey));
         if (!cacheValue) {

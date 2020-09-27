@@ -1,11 +1,15 @@
 import { reactive, Ref, watch, computed, onUnmounted } from "vue-demi";
 import { CancelablePromise, PlainBaseQueryConfig, PlainQueryKey, QueryFn, QueryResult, QueryStatus, ReFetchOptions } from "./types";
 import { defaultConfig, defaultReFetchOptions } from "./config";
-import { delay, useMountAndUnmount } from "../utils";
+import { createHash, delay, useMountAndUnmount } from "../utils";
 import { queryCache } from "./queryCache";
 import { queryManager } from "./queryManager";
-// todo add onMutate callback
 class Query<Data, Error, PlainKey extends PlainQueryKey> {
+    state = reactive({
+        hash: "",
+    });
+    // refetch interval num
+    clearIntervalNum: number | undefined;
     result = reactive<QueryResult>({
         isLoading: false,
         data: undefined,
@@ -20,11 +24,11 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
             console.error("your query function should return a promise with cancel property");
         },
     });
-    constructor(public queryKey: Ref<PlainQueryKey>, public queryFn: QueryFn<PlainKey, Data>, public config: Ref<Required<PlainBaseQueryConfig>>) {
-        this.result.reFetch = this.refetch;
+    init = () => {
         watch(
-            [queryKey, computed(() => ({ enabled: this.config.value.enabled, refetchInterval: this.config.value.refetchInterval }))],
+            [this.queryKey, computed(() => ({ enabled: this.config.value.enabled, refetchInterval: this.config.value.refetchInterval }))],
             () => {
+                this.state.hash = createHash(this.queryKey.value);
                 this.exec();
             },
             { immediate: true }
@@ -32,18 +36,18 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
         useMountAndUnmount(() => {
             // add listener to refetch
             const handler = () => this.exec();
-            if (config.value.refetchOnReconnect) {
+            if (this.config.value.refetchOnReconnect) {
                 window.addEventListener("online", handler, false);
             }
-            if (config.value.refetchOnWindowFocus) {
+            if (this.config.value.refetchOnWindowFocus) {
                 window.addEventListener("visibilitychange", handler, false);
                 window.addEventListener("focus", handler, false);
             }
             return () => {
-                if (config.value.refetchOnReconnect) {
+                if (this.config.value.refetchOnReconnect) {
                     window.removeEventListener("online", handler);
                 }
-                if (config.value.refetchOnWindowFocus) {
+                if (this.config.value.refetchOnWindowFocus) {
                     window.removeEventListener("focus", handler);
                     window.removeEventListener("visibilitychange", handler);
                 }
@@ -52,16 +56,21 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
         onUnmounted(() => {
             this.destroyself();
         });
+    };
+    constructor(public queryKey: Ref<PlainQueryKey>, public queryFn: QueryFn<PlainKey, Data>, public config: Ref<Required<PlainBaseQueryConfig>>) {
+        this.result.reFetch = this.refetch;
     }
-    // refetch interval num
-    clearIntervalNum: number | undefined;
 
+    setQueryData = (data: Data) => {
+        this.result.data = data;
+        queryCache.updateCache(this.queryKey.value, data);
+    };
     exec = () => {
         if (!this.config.value.enabled) {
             return;
         }
         const shouldHandleInitialData: boolean = this.config.value.initialData !== undefined;
-        if (shouldHandleInitialData && !queryCache.hasCache(this.queryKey)) {
+        if (shouldHandleInitialData && !queryCache.hasCache(this.queryKey.value)) {
             this.handleInitialData();
         }
         if (queryCache.hasCache(this.queryKey.value)) {
@@ -76,8 +85,9 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
         if (!queryCache.hasCache(this.queryKey.value)) {
             this.setLoadingStatus();
         }
-        this.fetch();
+        const promise = this.fetch();
         this.handleRefetchInterval();
+        return promise;
     };
 
     setSuccessStatus = (data: Data) => {
@@ -105,9 +115,9 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
     refetch = (options?: ReFetchOptions) => {
         const opt = Object.assign({}, defaultReFetchOptions, options) as Required<ReFetchOptions>;
         if (!opt.force) {
-            this.exec();
+            return this.exec();
         } else {
-            this.fetch();
+            return this.fetch();
         }
     };
     getShouldRetry = (error: Error) => {
@@ -134,6 +144,7 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
     fetch = () => {
         this.result.isFetching = true;
         let promise: CancelablePromise<Data>;
+        this.config.value.onMutate();
         if (Array.isArray(this.queryKey.value)) {
             // @ts-ignore
             promise = this.queryFn(...this.queryKey.value);
@@ -144,7 +155,7 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
         if (typeof promise.cancel === "function") {
             this.result.cancel = promise.cancel;
         }
-        promise
+        return promise
             .then((value) => {
                 this.setSuccessStatus(value);
                 queryCache.addToCache({
@@ -165,6 +176,7 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
             })
             .finally(() => {
                 this.result.isFetching = false;
+                this.config.value.onSettled(this.result.data, this.result.error);
             });
     };
     handleInitialData = () => {
