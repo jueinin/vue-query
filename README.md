@@ -6,13 +6,13 @@
 
 ## 功能概览
 
--   兼容vue2和3版本。使用vue2.x版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
+-   兼容 vue2 和 3 版本。使用 vue2.x 版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
 -   不限数据获取方式，你可以使用其他网络请求库例如`axios`，或者`umi request`，也可以使用 HTTP 或者 graphql
 -   请求自动缓存，当数据过期或者浏览器窗口重新 focus 时自动重新从服务端获取数据
 -   并行请求、依赖请求
 -   取消请求
 -   开箱即用的滚动恢复
--   支持tree shaking
+-   支持 tree shaking
 
 ## Documentation
 
@@ -67,7 +67,6 @@ codesandbox
 -   [基础请求](https://codesandbox.io/s/jichuqingqiu-vfozo)
 -   [依赖请求](https://codesandbox.io/s/yilaiqingqiu-xf19c)
 -   [取消请求](https://codesandbox.io/s/quxiaoqingqiu-srcjt)
-
 
 # Queries
 
@@ -251,7 +250,7 @@ const query = useQuery("/api/test", (url) => {
 ```tsx
 import { useIsFetching } from "@jueinin/vue-query";
 import { defineComponent } from "vue";
-import { NetworkIndicator } from "someUILib"
+import { NetworkIndicator } from "someUILib";
 const App = defineComponent({
     setup() {
         const globalIsFetching = useIsFetching();
@@ -311,34 +310,68 @@ const App = defineComponent({
 
 useMutation 可以有 onSuccess onError 等 callback，mutation.mutate 的第二个参数也可以传入这些 callback。 mutation.mutate 的 callback 会覆盖 useMutation 的 callback
 
-Tips: 可以在 onMutate 回调中进行乐观更新，onError 中进行撤回更新。
-
 ```tsx
-import { defineComponent } from "vue"
+import { defineComponent } from "vue";
 const App = defineComponent({
     setup() {
         // 使用传来的todo向服务端请求新建一个todo
-        const createTodoMutation = useMutation((todo: {title: string})=>Axios.post({
-            url: '/api/createTodo',
-            data: todo
-        }),{
-            onSuccess: (data)=> {
-                alert("创建成功！")
+        const createTodoMutation = useMutation(
+            (todo: { title: string }) =>
+                Axios.post({
+                    url: "/api/createTodo",
+                    data: todo,
+                }),
+            {
+                onSuccess: (data) => {
+                    alert("创建成功！");
+                },
             }
-        });
-        return ()=> {
-            return <div onClick={()=>{
-                // 传递一个todo
-                createTodoMutation.mutate({title: "write doc!"},{
-                    // mutate的回调会覆盖useMutation的回调。上面的回调不会生效
-                    onSuccess: (data)=> {
-                        alert("我会覆盖掉上面的onSuccess回调")
-                    }
-                })
-            }}>点击创建todo</div>
-        }
-    }
-})
+        );
+        return () => {
+            return (
+                <div
+                    onClick={() => {
+                        // 传递一个todo
+                        createTodoMutation.mutate(
+                            { title: "write doc!" },
+                            {
+                                // mutate的回调会覆盖useMutation的回调。上面的回调不会生效
+                                onSuccess: (data) => {
+                                    alert("我会覆盖掉上面的onSuccess回调");
+                                },
+                            }
+                        );
+                    }}
+                >
+                    点击创建todo
+                </div>
+            );
+        };
+    },
+});
+```
+
+### 乐观更新
+
+onMutate 先进行乐观更新，并返回一个 rollback 函数，在 onError 或者 onSettled 函数中回滚更新。
+
+```tsx
+const hook = renderHook(() => {
+    const count = ref(0);
+    const mutation = useMutation((pa: number) => Promise.reject("err"), {
+        onMutate: (variable) => {
+            count.value++;
+            // 返回rollback函数
+            return () => {
+                count.value--;
+            };
+        },
+        onError: (error, variable, rollback) => {
+            rollback();
+        },
+    });
+    return { mutation };
+});
 ```
 
 # api 指南
@@ -439,24 +472,22 @@ const query = useQuery(queryKey, queryFn, config);
 一般用于 post 请求，只有在调用返回值的 mutate 方法时才执行。
 
 ```tsx
-import {defineComponent} from 'vue'
+import { defineComponent } from "vue";
 
 const App = defineComponent({
     setup() {
-        const mutation = useMutation(()=>Promise.resolve("data"), {
-                onError: ()=>void 0,
-                onSuccess: ()=>void 0,
-                onSettled: ()=>void 0,
-                onMutate: ()=>void 0,
-            });
+        const mutation = useMutation(() => Promise.resolve("data"), {
+            onError: () => void 0,
+            onSuccess: () => void 0,
+            onSettled: () => void 0,
+            onMutate: () => void 0,
+        });
         return () => {
             // 注意不要直接写成onClick={mutation.mutate}, 这样mutate方法会被传入一个event对象
-            return <div onClick = {()=>mutation.mutate()}>
-
-            </div>
-        }
-    }
-})
+            return <div onClick={() => mutation.mutate()}></div>;
+        };
+    },
+});
 ```
 
 ### 参数
@@ -484,7 +515,7 @@ const App = defineComponent({
     -   isSuccess: boolean
     -   status: "loading" | "success" | "error"
     -   reset: ()=>void
-        -   初始化状态，将data,error,isError,isSuccess,status设置为
+        -   初始化状态，将 data,error,isError,isSuccess,status 设置为
 
 # VueQueryProvider
 
@@ -514,8 +545,10 @@ const Parent = defineComponent({
 ```
 
 # useIsFetching
+
 返回是否全局中有请求正在处理。
+
 ```tsx
- import { useIsFetching } from '@jueinin/vue-query'
- const isFetching: Ref<boolean> = useIsFetching()
+import { useIsFetching } from "@jueinin/vue-query";
+const isFetching: Ref<boolean> = useIsFetching();
 ```

@@ -39,11 +39,11 @@ describe("useMutation", () => {
             const { hook, fn, onError, onSettled } = setUp();
             hook.vm.mutation.mutate(variableValue);
             await flushPromises();
-            expect(onSettled.mock.calls).toEqual([[response, undefined, variableValue]]);
+            expect(onSettled.mock.calls).toEqual([[response, undefined, variableValue,undefined]]);
             fn.mockRejectedValue("err");
             hook.vm.mutation.mutate(variableValue);
             await flushPromises();
-            expect(onError.mock.calls).toEqual([["err", variableValue]]);
+            expect(onError.mock.calls).toEqual([["err", variableValue,undefined]]);
         });
     });
 
@@ -111,4 +111,25 @@ describe("useMutation", () => {
         hook.vm.mutation.cancel();
         expect(cancelFn).toHaveBeenCalledTimes(1);
     });
+    test("it can rollback update on onError callback ",async ()=> {
+        let count = 0;
+        const hook = renderHook(() => {
+            const mutation = useMutation((pa: number) => Promise.reject("err"), {
+                onMutate: variable => {
+                    count++;
+                    return () => {
+                        count--;
+                    };
+                },
+                onError: (error, variable, rollback) => {
+                    rollback();
+                }
+            });
+            return { mutation };
+        });
+        hook.vm.mutation.mutate(2);
+        expect(count).toEqual(1);
+        await flushPromises();
+        expect(count).toEqual(0);
+    })
 });

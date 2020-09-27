@@ -4,7 +4,7 @@ import { defaultConfig, defaultReFetchOptions } from "./config";
 import { delay, useMountAndUnmount } from "../utils";
 import { queryCache } from "./queryCache";
 import { queryManager } from "./queryManager";
-
+// todo add onMutate callback
 class Query<Data, Error, PlainKey extends PlainQueryKey> {
     result = reactive<QueryResult>({
         isLoading: false,
@@ -85,12 +85,14 @@ class Query<Data, Error, PlainKey extends PlainQueryKey> {
         this.result.isSuccess = true;
         this.result.status = QueryStatus.Success;
         this.result.isLoading = false;
+        this.config.value.onSuccess(data);
     };
     setErrorStatus = (error: Error) => {
         this.result.error = error;
         this.result.isError = true;
         this.result.isLoading = false;
         this.result.status = QueryStatus.Error;
+        this.config.value.onError(error);
     };
     setLoadingStatus = () => {
         this.result.isLoading = true;

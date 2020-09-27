@@ -70,9 +70,9 @@ export enum CacheStaleStatus {
 }
 
 export type PlainMutationConfig<Variable, Data, Error> = {
-    onMutate?: (variable: Variable) => void;
+    onMutate?: (variable: Variable) => any
     onSuccess?: (data: Data, variable: Variable) => void;
-    onError?: (error: Error, variable: Variable) => void;
-    onSettled?: (data: Data | undefined, error: Error | undefined, variable: Variable) => void;
+    onError?: (error: Error, variable: Variable,rollback: any) => void;
+    onSettled?: (data: Data | undefined, error: Error | undefined, variable: Variable,rollback: any) => void;
 };
-export type NotFunction<T> = T extends Function ? never : T;
+type NotFunction<T> = T extends Function ? never : T;
