@@ -22,6 +22,7 @@
 -   [Queries](#queries)
 -   [缓存](#缓存)
 -   [Mutation](#useMutation)
+-   [queryManager](#queryManager)
 -   [API 指南](#api指南)
 
 # 安装
@@ -552,3 +553,108 @@ const Parent = defineComponent({
 import { useIsFetching } from "@jueinin/vue-query";
 const isFetching: Ref<boolean> = useIsFetching();
 ```
+
+# queryCache
+
+操作缓存的底层接口,一般使用queryManager即可。
+
+```tsx
+import {queryCache} from '@jueinin/vue-query'
+type CacheValue<T = any> = {
+    storeTime: number;
+    data: T;
+    getIsStaled: () => boolean;
+    // 这个属性可以忽略
+    timeoutDeleteNum: number | undefined
+}
+class QueryCache {
+    addToCache: <T>(value: {
+        queryKey: PlainQueryKey;
+        data: T;
+        cacheTime: number;
+        staleTime: number;
+    }) => void;
+    removeFromCache: (queryKey: PlainQueryKey) => void;
+    updateCache: {
+        <T>(queryKey: PlainQueryKey, updater: (oldData: T) => T): void;
+        <T>(queryKey: PlainQueryKey, updater: T): void;
+    };
+    getCache: (queryKey: PlainQueryKey) => CacheValue<any> | undefined;
+    hasCache: (queryKey: PlainQueryKey) => boolean;
+    clear: () => void;
+}
+```
+-   `addToCache` 添加缓存，添加完成后，会根据cacheTime和staleTime来决定后续缓存的状态。
+-   `removeFormCache` 根据queryKey删除缓存数据。
+-   `updateCache` 更新指定queryKey关联的缓存数据。可以直接传递一个新的缓存数据，也可以传递一个更新函数，返回值为新的缓存数据。
+-   `getCache` 根据queryKey获取缓存数据。返回值为CacheValue
+-   `hasCache` 根据queryKey决定是否存在对应的缓存数据。
+
+
+# queryManager
+
+管理useQuery产生的请求(即Query对象)。Query对象代表一个请求，包含请求的各种状态 isLoading，data，error等请求状态
+
+
+-   `queryManager.queryList` 管理的所有Query对象
+-   `queryManager.createQuery` 创建query对象，并请求。通常通过useQuery间接调用。
+    -   queryKey: `Ref<PlainQueryKey>`，Ref类型的queryKey
+    -   queryFn:  和useQuery参数相同，返回Promise
+    -   config： Ref<Required<PlainBaseQueryConfig>> 配置，等同useQuery的config
+    -   返回query对象。
+
+-   `queryManager.removeQuery` 删除query对象，参数为query
+
+-   `queryManager.getQueryByQueryKey` 根据queryKey获取query对象
+
+-   `queryManager.prefetchQuery`    预请求数据，可以在数据被需要使用之前先请求并缓存数据。例如，可以预先请求下一页的数据，当进入下一页时，数据就可以立刻加载。
+    -   queryKey
+    -   queryFn
+    -   config
+    -   extraArgs: `object`
+        -   force: boolean 是否直接请求，不论缓存是否过期
+    -   返回值 `Promise<Data>`
+  
+-   `queryManager.getQueriesByQueryKey` 根据queryKey查找所有满足条件的query对象
+    -   queryKeyOrPredication: queryKey或者是一个函数 (queryKey: PlainQueryKey)=>boolean。当为函数时，将会遍历`queryManager.queryList`
+    找到返回true值的query，并忽略exact选项。
+    
+    当queryKey为非数组类型时，使用deepEqual来匹配相等的query对象。当为数组类型且exact选项为false时可以模糊匹配，例如 `['key1']`可以匹配
+    `'key1'`，`['key1', 'key2']`, `["key1", "key2", "key3"]`
+    
+    -   options: 可选的option
+        -   staled: boolean 是否只筛选缓存过期了的query。默认false
+        -   exact: boolean  当为true时禁用模糊匹配，默认false
+
+-   `queryManager.refetchQueries` 对所选的query对象重新进行网络请求请求
+    - 参数同`queryManager.prefetchQuery`
+
+-   `queryManager.invalidateQueries` 使所选query对象对应的缓存失效，并重新请求数据
+    -   queryKeyOrPredication: 参数同`queryManager.getQueriesByQueryKey`的参数
+    -   option.shouldRefetch: 当为false时禁用自动重新获取请求数据
+
+-   `queryManager.setQueryData` 设置query对应的缓存数据，会同时**更新组件渲染新的数据**
+    -   queryKey
+    -   updater: 更新函数 Data | (data: Data) => Data. 直接传递新的缓存数据，或者通过函数返回一个新的缓存数据。
+    
+-   `queryManaget.getQueryData` 获取缓存数据
+    -   queryKey
+    -   返回缓存数据。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

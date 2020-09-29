@@ -18,13 +18,8 @@ const createCacheValue = <T>(value: { data: T; staleTime: number,timeoutNum?: nu
         timeoutDeleteNum: value.timeoutNum
     };
 };
-// todo we need enhance the feature of query cache
-/**
- * 1. when update cache, the ui should update too
- * 2.
- */
 export class QueryCache {
-    map: Map<string, CacheValue> = new Map();
+    private map: Map<string, CacheValue> = new Map();
     addToCache = <T>(value: { queryKey: PlainQueryKey; data: T; cacheTime: number; staleTime: number }) => {
         if (this.map.has(createHash(value.queryKey))) {
             // when need override we should reset delete time
@@ -43,6 +38,9 @@ export class QueryCache {
     };
     removeFromCache = (queryKey: PlainQueryKey): void => {
         const hash = createHash(queryKey);
+        const cacheValue = this.getCache(queryKey);
+        // cancel the scheduled delete operation
+        clearTimeout(cacheValue?.timeoutDeleteNum);
         this.map.delete(hash);
     };
     updateCache: {

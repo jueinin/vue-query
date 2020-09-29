@@ -9,6 +9,7 @@ jest.useFakeTimers();
 describe("query manager", () => {
     beforeEach(() => {
         queryCache.clear();
+        queryManager.queryList = [];
     });
     const mount = (fn: any) => {
         renderHook(() => {
@@ -66,7 +67,7 @@ describe("query manager", () => {
             });
         };
         let q1, q2, q3, q4;
-        const hook = renderHook(() => {
+        renderHook(() => {
             q1 = getQueryByKey("key1");
             q2 = getQueryByKey("key1");
             q3 = getQueryByKey(["key1", "key2"]);
@@ -85,8 +86,31 @@ describe("query manager", () => {
             ["key1", "key2", "key3"],
         ]);
         expect(queryManager.getQueriesByQueryKey(["key1", "key2"], { staled: true }).map((value) => value.queryKey.value)).toEqual([]);
-        expect(queryManager.getQueriesByQueryKey([]).map(value => value.queryKey.value)).toEqual(["key1", "key1", ["key1", "key2"], ["key1", "key2", "key3"]]);
-        // default value
-        expect(queryManager.getQueriesByQueryKey().map(value => value.queryKey.value)).toEqual(["key1", "key1", ["key1", "key2"], ["key1", "key2", "key3"]]);
+        expect(queryManager.getQueriesByQueryKey(["key1", "key2"], { exact: true }).map((value) => value.queryKey.value)).toEqual([
+            ["key1", "key2"]
+        ]);
+        expect(queryManager.getQueriesByQueryKey([]).map((value) => value.queryKey.value)).toEqual([
+            "key1",
+            "key1",
+            ["key1", "key2"],
+            ["key1", "key2", "key3"],
+        ]);
+        // default queryKey will match all queries
+        expect(queryManager.getQueriesByQueryKey().map((value) => value.queryKey.value)).toEqual([
+            "key1",
+            "key1",
+            ["key1", "key2"],
+            ["key1", "key2", "key3"],
+        ]);
+    });
+    test("invalidate query", async () => {
+        const hook = renderHook(() => {
+            const q1 = useQuery("k1", jest.fn().mockResolvedValue("data"));
+            const q2 = useQuery("k2", jest.fn().mockResolvedValue("data"));
+            const q3 = useQuery("k3", jest.fn().mockResolvedValue("data"));
+        });
+        queryManager.invalidateQueries((queryKey) => {
+            return typeof queryKey === "string" && queryKey[0] === "k";
+        });
     });
 });

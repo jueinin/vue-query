@@ -107,10 +107,31 @@ export class QueryManager {
         }
     ) => {
         const queries = this.getQueriesByQueryKey(queryKeyOrPredication, options);
-        queries.forEach(value => {
+        queries.forEach((value) => {
             value.refetch();
-        })
+        });
     };
+    invalidateQueries = (queryKeyOrPredication: PlainQueryKey | ((queryKey: PlainQueryKey)=>boolean),options?: {
+        exact?: boolean,
+        shouldRefetch?: boolean
+    }) => {
+        const opt = Object.assign({
+            exact: false,
+            shouldRefetch: true
+        }, options);
+        const queries = this.getQueriesByQueryKey(queryKeyOrPredication, {
+            exact: opt.exact
+        });
+        const promiseList = queries.map(value => {
+            queryCache.removeFromCache(value.queryKey.value);
+            let promise = value.exec();
+            if (!promise) {
+                promise = Promise.resolve();
+            }
+            return promise;
+        });
+        return Promise.all(promiseList);
+    }
     setQueryData = <T>(queryKey: PlainQueryKey, updater: T extends Function ? never : T | ((oldValue: T) => T), config?: PlainBaseQueryConfig) => {
         const oldValue = this.getQueryData(queryKey);
         const newValue = typeof updater === "function" ? updater(oldValue) : updater;
