@@ -4,6 +4,15 @@
 
 可以理解为基于 vue 的 react query, 实在是太好用了，所以想移植到 vue 中来。
 
+[![NPM version][npm-image]][npm-url] [![npm download][download-image]][download-url] [![bundle size][bundlephobia-image]][bundlephobia-url]
+
+[npm-image]: http://img.shields.io/npm/v/@jueinin/vue-query.svg?style=flat-square
+[npm-url]: http://npmjs.org/package/@jueinin/vue-query
+[download-image]: https://img.shields.io/npm/dm/@jueinin/vue-query.svg?style=flat-square
+[download-url]: https://npmjs.org/package/@jueinin/vue-query
+[bundlephobia-url]: https://bundlephobia.com/result?p=@jueinin/vue-query
+[bundlephobia-image]: https://badgen.net/bundlephobia/minzip/@jueinin/vue-query
+
 ## 功能概览
 
 -   兼容 vue2 和 3 版本。使用 vue2.x 版本，你需要先安装 `@vue/composition-api`依赖。thanks to [vue-demi](https://github.com/antfu/vue-demi)
