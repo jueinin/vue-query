@@ -4,7 +4,7 @@ import { Query } from "./query";
 import { queryCache, useQuery } from "..";
 import { createHash, getQueryArgs } from "../utils";
 import { defaultConfig } from "./config";
-import fastDeepEqual from "fast-deep-equal";
+import {deepEqual} from "../utils";
 export class QueryManager {
     queryList: Query<any, any, any>[] = [];
     createQuery = <Data, Key extends PlainQueryKey>(
@@ -77,7 +77,7 @@ export class QueryManager {
             // filter by plain query key
             if (matchExacted) {
                 queries = this.queryList.filter((query) => {
-                    return fastDeepEqual(query.queryKey.value, queryKeyOrPredication);
+                    return deepEqual(query.queryKey.value, queryKeyOrPredication);
                 });
             } else {
                 // non exact match
@@ -86,10 +86,10 @@ export class QueryManager {
                     if (Array.isArray(queryKeyOrPredication)) {
                         const arrQueryKey = Array.isArray(query.queryKey.value) ? query.queryKey.value : [query.queryKey.value];
                         return queryKeyOrPredication.every((queryKeyItem, index) => {
-                            return fastDeepEqual(queryKeyItem, arrQueryKey[index]);
+                            return deepEqual(queryKeyItem, arrQueryKey[index]);
                         });
                     } else {
-                        return fastDeepEqual(query.queryKey.value, queryKeyOrPredication);
+                        return deepEqual(query.queryKey.value, queryKeyOrPredication);
                     }
                 });
             }

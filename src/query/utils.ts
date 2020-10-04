@@ -1,7 +1,6 @@
 import { PlainBaseQueryConfig, QueryFn, PlainQueryKey, UseQueryObjectConfig } from "./core/types";
 import { defaultConfig } from "./core/config";
 import { Ref, onMounted, onUnmounted, isRef, ref, computed, inject } from "vue-demi";
-const objectHash = require("object-hash/dist/object_hash.js");
 export const getQueryArgs = <PlainKey extends PlainQueryKey, TResult>(params: {
     args: any[];
     contextConfigRef: undefined | Ref<PlainBaseQueryConfig>;
@@ -54,5 +53,25 @@ export const useMountAndUnmount = (fn: (() => any) | (() => () => void)) => {
     });
 };
 export const createHash = (value: any) => {
-    return objectHash(value);
+    // return objectHash(value);
+    // remove objectHash to reduce bundle size
+    // base on https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+    const hashCode = (s:string) => s.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)
+    return "hash: "+hashCode(JSON.stringify(value));
+
+};
+export const deepEqual = (a: any, b: any) => {
+    if (a === b) return true;
+
+    if (a && b && typeof a == "object" && typeof b == "object") {
+        if (a.constructor !== b.constructor) return false;
+
+        var length, i, keys;
+        if (Array.isArray(a)) {
+            length = a.length;
+            if (length != b.length) return false;
+            for (i = length; i-- !== 0; ) if (!deepEqual(a[i], b[i])) return false;
+            return true;
+        }
+    }
 };
